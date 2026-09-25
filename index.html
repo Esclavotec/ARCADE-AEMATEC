@@ -3193,16 +3193,18 @@ function bjRenderLocal() {
 
 /* ---- mesa online ---- */
 function bjSeatList() { return Object.entries(BJ.roomPlayers).sort((a, b) => a[1].slot - b[1].slot); }
-function bjTurnUid() { for (const [uid, p] of bjSeatList()) if (p.status === 'playing') return uid; return null; }
+function bjStatusOf(uid) { return (BJ.roomData && BJ.roomData.status && BJ.roomData.status[uid]) || 'waiting'; }
+function bjHandOf(uid) { return (BJ.roomData && BJ.roomData.hands && BJ.roomData.hands[uid]) || []; }
+function bjTurnUid() { for (const [uid] of bjSeatList()) if (bjStatusOf(uid) === 'playing') return uid; return null; }
 async function bjCreate() {
   if (!(await fbReady)) return bjMenuMsg('SIN CONEXIÓN A FIREBASE: SOLO SE PUEDE JUGAR SOLO.', 'lose');
   bjLeaveOnline(); bjMenuMsg('CREANDO MESA…');
   try {
     let code, ref;
     for (let k = 0; k < 5; k++) { code = genCode(); ref = fs.doc(db, 'blackjack', code); if (!(await fs.getDoc(ref)).exists()) break; }
-    await fs.setDoc(ref, { host: UID, state: 'lobby', deck: [], dealerHand: [], dealerHidden: true, round: 0, created: fs.serverTimestamp() });
+    await fs.setDoc(ref, { host: UID, state: 'lobby', deck: [], dealerHand: [], dealerHidden: true, hands: {}, status: {}, round: 0, created: fs.serverTimestamp() });
     BJ.room = code;
-    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot: 0, hand: [], status: 'waiting', joined: fs.serverTimestamp() });
+    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot: 0, joined: fs.serverTimestamp() });
     bjEnterLobby();
   } catch (e) { console.error(e); BJ.room = null; bjMenuMsg('ERROR AL CREAR MESA: ' + e.message, 'lose'); }
 }
@@ -3220,7 +3222,7 @@ async function bjJoin() {
     if (!mine && used.size >= 5) throw new Error('LA MESA ESTÁ LLENA (MÁX. 5)');
     let slot = 0; while (used.has(slot)) slot++;
     BJ.room = code;
-    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot, hand: [], status: 'waiting', joined: fs.serverTimestamp() });
+    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot, joined: fs.serverTimestamp() });
     bjEnterLobby();
   } catch (e) { BJ.room = null; bjMenuMsg(e.message, 'lose'); }
 }
@@ -3279,16 +3281,17 @@ function bjRenderOnline() {
   const list = bjSeatList(), seats = $('#bj-seats'), turnUid = bjTurnUid(), now = Date.now();
   seats.innerHTML = '';
   list.forEach(([uid, p]) => {
+    const hand = bjHandOf(uid), status = bjStatusOf(uid);
     const seat = document.createElement('div'), gone = uid !== UID && isStale(p.lastSeen, now);
     seat.className = 'bj-seat' + (uid === UID ? ' me' : '') + (uid === turnUid ? ' turn' : '');
     seat.innerHTML = `<div class="bj-name"><b>${esc(p.name)}</b>${uid === UID ? ' (TÚ)' : ''}${gone ? ' <span class="discon">⚠</span>' : ''}</div>`;
     const cardsEl = document.createElement('div'); cardsEl.className = 'bj-cards';
-    bjHandEl(cardsEl, p.hand || [], false);
+    bjHandEl(cardsEl, hand, false);
     seat.appendChild(cardsEl);
-    const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = (p.hand || []).length ? 'VALOR: ' + bjHandValue(p.hand) : '';
+    const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = hand.length ? 'VALOR: ' + bjHandValue(hand) : '';
     seat.appendChild(val);
-    const statusTxt = { waiting: 'ESPERA LA PRÓXIMA MANO', playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[p.status] || '';
-    const st = document.createElement('div'); st.className = 'bj-status' + (p.status === 'bust' ? ' bust' : p.status === 'blackjack' ? ' bjk' : '');
+    const statusTxt = { waiting: 'ESPERA LA PRÓXIMA MANO', playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[status] || '';
+    const st = document.createElement('div'); st.className = 'bj-status' + (status === 'bust' ? ' bust' : status === 'blackjack' ? ' bjk' : '');
     st.textContent = statusTxt + (gone ? ' · DESCONECTADO' : ''); seat.appendChild(st);
     seats.appendChild(seat);
   });
@@ -3297,9 +3300,9 @@ function bjRenderOnline() {
 }
 function bjOnlineShowResult() {
   if (BJ.spectating) return;
-  const me = BJ.roomPlayers[UID];
-  if (!me || me.status === 'waiting') { bjMsg(''); return; }
-  const res = bjResult(me.hand || [], BJ.roomData.dealerHand || []);
+  const hand = bjHandOf(UID);
+  if (bjStatusOf(UID) === 'waiting' || !hand.length) { bjMsg(''); return; }
+  const res = bjResult(hand, BJ.roomData.dealerHand || []);
   bjShowResult(res);
   if (res === 'win' || res === 'blackjack') { SFX.play('win'); LB.increment('veintiuno').then(bjLB); }
   else if (res === 'push') SFX.play('click'); else SFX.play('lose');
@@ -3308,13 +3311,13 @@ async function bjOnlineHit() {
   if (BJ.spectating || bjTurnUid() !== UID) return;
   try {
     await fs.runTransaction(db, async tx => {
-      const roomRef = fs.doc(db, 'blackjack', BJ.room), meRef = fs.doc(db, 'blackjack', BJ.room, 'players', UID);
-      const [rs, ms] = await Promise.all([tx.get(roomRef), tx.get(meRef)]);
-      if (!rs.exists() || !ms.exists()) return;
-      const deck = [...rs.data().deck], card = deck.pop();
-      const hand = [...(ms.data().hand || []), card], v = bjHandValue(hand);
+      const roomRef = fs.doc(db, 'blackjack', BJ.room);
+      const rs = await tx.get(roomRef);
+      if (!rs.exists()) return;
+      const d = rs.data(), deck = [...d.deck], card = deck.pop();
+      const hand = [...((d.hands && d.hands[UID]) || []), card], v = bjHandValue(hand);
       const status = v > 21 ? 'bust' : (v === 21 ? 'stand' : 'playing');
-      tx.update(roomRef, { deck }); tx.update(meRef, { hand, status });
+      tx.update(roomRef, { deck, [`hands.${UID}`]: hand, [`status.${UID}`]: status });
     });
     SFX.play('click');
   } catch (e) { console.error(e); }
@@ -3322,19 +3325,15 @@ async function bjOnlineHit() {
 function bjOnlineStand() {
   if (BJ.spectating || bjTurnUid() !== UID) return;
   SFX.play('click');
-  fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', UID), { status: 'stand' }).catch(console.error);
+  fs.updateDoc(fs.doc(db, 'blackjack', BJ.room), { [`status.${UID}`]: 'stand' }).catch(console.error);
 }
 async function bjOnlineDeal() {
   if (!BJ.isHost || BJ.spectating) return;
   const list = bjSeatList(); if (!list.length) return;
-  const deck = bjShuffle(bjFreshDeck()), dealerHand = [deck.pop(), deck.pop()], hands = {};
-  list.forEach(([uid]) => { hands[uid] = [deck.pop(), deck.pop()]; });
+  const deck = bjShuffle(bjFreshDeck()), dealerHand = [deck.pop(), deck.pop()], hands = {}, status = {};
+  list.forEach(([uid]) => { const h = [deck.pop(), deck.pop()]; hands[uid] = h; status[uid] = bjIsBlackjack(h) ? 'blackjack' : 'playing'; });
   try {
-    await fs.updateDoc(fs.doc(db, 'blackjack', BJ.room), { state: 'play', deck, dealerHand, dealerHidden: true, round: (BJ.roomData.round || 0) + 1 });
-    await Promise.all(list.map(([uid]) => {
-      const h = hands[uid], status = bjIsBlackjack(h) ? 'blackjack' : 'playing';
-      return fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', uid), { hand: h, status });
-    }));
+    await fs.updateDoc(fs.doc(db, 'blackjack', BJ.room), { state: 'play', deck, dealerHand, dealerHidden: true, hands, status, round: (BJ.roomData.round || 0) + 1 });
   } catch (e) { console.error(e); }
 }
 function bjHostPoll() {
@@ -3343,7 +3342,7 @@ function bjHostPoll() {
   const turnUid = bjTurnUid();
   if (turnUid) {
     const p = BJ.roomPlayers[turnUid];
-    if (p && isStale(p.lastSeen, Date.now())) fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', turnUid), { status: 'stand' }).catch(() => {});
+    if (p && isStale(p.lastSeen, Date.now())) fs.updateDoc(fs.doc(db, 'blackjack', BJ.room), { [`status.${turnUid}`]: 'stand' }).catch(() => {});
     return;
   }
   if (!BJ._dealerRunning) { BJ._dealerRunning = true; bjHostDealerLoop(); }
@@ -3360,10 +3359,9 @@ async function bjHostDealerLoop() {
       const d = snap.data();
       if (d.state !== 'play') break;
       if (d.dealerHidden) { await fs.updateDoc(fs.doc(db, 'blackjack', room), { dealerHidden: false }); continue; }
-      const listSnap = await fs.getDocs(fs.collection(db, 'blackjack', room, 'players'));
-      const players = []; listSnap.forEach(p => players.push(p.data()));
-      const active = players.filter(p => p.status !== 'waiting');
-      const allBust = active.length > 0 && active.every(p => p.status === 'bust');
+      const statuses = Object.values(d.status || {});
+      const active = statuses.filter(s => s !== 'waiting');
+      const allBust = active.length > 0 && active.every(s => s === 'bust');
       const dv = bjHandValue(d.dealerHand || []);
       if (!allBust && dv < 17) {
         const deck = [...(d.deck || [])], card = deck.pop();
