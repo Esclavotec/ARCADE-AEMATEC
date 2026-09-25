@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Arcade Matec</title>
+<title>Arcade AEMATEC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
@@ -22,9 +22,10 @@ body{
 }
 .wrap{max-width:1180px;margin:0 auto;padding:12px 16px 24px}
 header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
-h1{font-size:20px;cursor:pointer;user-select:none;-webkit-user-select:none;margin:0;color:var(--yellow);text-shadow:3px 3px 0 var(--red),6px 6px 0 var(--dark);letter-spacing:2px}
+h1{display:flex;align-items:center;gap:10px;font-size:20px;cursor:pointer;user-select:none;-webkit-user-select:none;margin:0;color:var(--yellow);text-shadow:3px 3px 0 var(--red),6px 6px 0 var(--dark);letter-spacing:2px}
 h3{margin:0 0 6px;color:var(--yellow);font-size:13px}
 h4{margin:0 0 8px;font-size:10px;color:var(--cyan)}
+.logo{height:48px;width:auto;image-rendering:pixelated;filter:drop-shadow(3px 3px 0 var(--dark));-webkit-user-drag:none}
 .who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .net{font-size:9px;color:var(--mute)}
 .net.on{color:var(--lime)}
@@ -54,7 +55,7 @@ button,input{font-family:inherit;font-size:10px;color:var(--ink)}
 
 nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
 nav .btn{padding:8px 12px}
-@media (max-width:700px){nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 2px;margin-bottom:10px}nav::-webkit-scrollbar{display:none}nav .btn{flex:none;font-size:9px}h1{font-size:16px}.who label{display:none}}
+@media (max-width:700px){nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 2px;margin-bottom:10px}nav::-webkit-scrollbar{display:none}nav .btn{flex:none;font-size:9px}h1{font-size:14px}.logo{height:34px}.who label{display:none}}
 .tab{background:var(--panel)}
 .tab.on{background:var(--orange);color:var(--dark)}
 
@@ -169,7 +170,7 @@ nav .btn{padding:8px 12px}
 /* Intro */
 #intro{position:fixed;inset:0;z-index:90;background:#0b0c18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:16px;transition:opacity .45s}
 #intro.out{opacity:0}
-#intro canvas{width:min(94vw,112vh);image-rendering:pixelated;cursor:pointer}
+#intro canvas{width:min(94vw,calc((100vh - 130px) * 1.6));image-rendering:pixelated;cursor:pointer}
 #intro-skip{position:absolute;top:12px;right:12px}
 #intro-go{font-size:14px;padding:14px 30px;animation:blink 1s steps(2) infinite}
 /* Menú */
@@ -212,7 +213,7 @@ nav .btn{padding:8px 12px}
 <body>
 <div class="wrap">
   <header>
-    <h1>ARCADE MATEC</h1>
+    <h1><img class="logo" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAwCAYAAAAGlsrkAAABvklEQVR4nNVYsbGDMAyVOWoKaDguK/wid5mAlh0yXHZIywq/yAocRwMFC/CbL84IGWQFAnlVMJaeJD/LJgBKNF0/NF0/aO3VpIG5DYG5qckDDWmW5ONzluSgIfcm3grfQUzLjNCU22hI67acEeN4Gkcin96lRtKirqCoK19zPTGS2r9pBXYj3gLexFmSwzO7jM/P7AKc4NYQelv8k2N5NaQAHqoGcG8nxC6qpqR1W6pE5U3MIY0joyUXEXPZciX16WCHbadV2Gev6/yVzKH4jgbiWluNyBaJ1/atCxKRnU9cGsH42IS2kcSxPHTeBjUS4sulQ/36eogP/evrAb8/dwAA1qbp+iGNI2PsAXsC7VRSFHU1EmMgADAepZOM7QEuCPp+CU3XD9CWY+CUEDFTtbQvu0DnurbjObaTZgtpfZ2vV/uuLcVa/x6JtX1ZCtq/jxXXlqKS+j5OXO82jDW4RPaRjDnyCfHW2XJAdR/fQPbOll3rT/5ZhjyhffvAwT0yp77DNI4MDtIA3g3C9mP7nlx9cJDek+yvfxs0IG6pOF9oN8uGZu8CDWhpPnf9cZaRK5MUNChuueQXOA9IdPEHsDN7ohq8EwcAAAAASUVORK5CYII="><span>ARCADE AEMATEC</span></h1>
     <div class="who">
       <label for="name">JUGADOR</label>
       <input id="name" class="px-in" maxlength="10" placeholder="TU NOMBRE">
@@ -494,7 +495,7 @@ nav .btn{padding:8px 12px}
 </div>
 <div id="intro">
   <button class="btn gray" id="intro-skip">SALTAR</button>
-  <canvas id="intro-cv" width="200" height="120"></canvas>
+  <canvas id="intro-cv" width="240" height="150"></canvas>
   <button class="btn red" id="intro-go" hidden>INICIAR</button>
 </div>
 <div id="egg" hidden><img id="egg-img" alt="Easter egg"><p>¡EASTER EGG!</p></div>
@@ -2801,7 +2802,9 @@ const GAMES = [
 /* ---------- intro: bloques de tetris + moneda ---------- */
 const INTRO = (() => {
   const el = $('#intro'), cvI = $('#intro-cv'), g = cvI.getContext('2d');
-  const W = 200, H = 120, CELL = 5;
+  const W = 240, H = 150, CELL = 5;
+  const LOGO = new Image(); LOGO.src = document.querySelector('.logo').src;
+  const logo = { off: -70, v: 0, bounced: 0, done: false };
   const FONT5 = {
     A: ['.###.', '#...#', '#####', '#...#', '#...#'], R: ['####.', '#...#', '####.', '#..#.', '#...#'],
     C: ['.####', '#....', '#....', '#....', '.####'], D: ['####.', '#...#', '#...#', '#...#', '####.'],
@@ -2810,7 +2813,7 @@ const INTRO = (() => {
   };
   const TET = ['#73eff7', '#ffcd75', '#b13e53', '#a7f070', '#ef7d57', '#41a6f6', '#5d275d'];
   const pieces = [];
-  [['ARCADE', 4], ['MATEC', 12]].forEach(([word, oy]) => {
+  [['ARCADE', 12], ['AEMATEC', 18]].forEach(([word, oy]) => {
     const ox = Math.floor((W / CELL - (word.length * 6 - 1)) / 2);
     [...word].forEach((ch, ci) => {
       const left = new Map();
@@ -2831,7 +2834,7 @@ const INTRO = (() => {
     });
   });
   pieces.sort((a, b) => b.maxY - a.maxY || Math.random() - .5);
-  pieces.forEach((p, i) => { p.delay = 250 + i * 48; p.off = -(p.maxY * CELL + 14 + Math.random() * 20); p.v = 0; p.done = false; });
+  pieces.forEach((p, i) => { p.delay = 750 + i * 40; p.off = -(p.maxY * CELL + 14 + Math.random() * 20); p.v = 0; p.done = false; });
   const stars = [...Array(40)].map(() => [Math.random() * W | 0, Math.random() * H | 0, Math.random() * 6]);
   let t0 = 0, last = 0, phase = 'fall', flash = 0, coin = null, lastTick = 0, raf = 0;
   function block(x, y, col) {
@@ -2845,7 +2848,12 @@ const INTRO = (() => {
     const t = now - t0, dt = Math.min(.05, (now - (last || now)) / 1000); last = now;
     g.fillStyle = '#0b0c18'; g.fillRect(0, 0, W, H);
     stars.forEach(s => { g.fillStyle = Math.sin(t / 300 + s[2]) > .6 ? '#f4f4f4' : '#333c57'; g.fillRect(s[0], s[1], 1, 1); });
-    let all = true;
+    if (t > 100 && !logo.done) {
+      logo.v += 900 * dt; logo.off += logo.v * dt;
+      if (logo.off >= 0) { logo.off = 0; if (logo.bounced < 2) { logo.v = -logo.v * .35; logo.bounced++; if (SFX.ctx) SFX.tone(140, .08, 'square', .05); } else logo.done = true; }
+    }
+    if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, Math.round(W / 2 - LOGO.naturalWidth / 2), Math.round(6 + (t > 100 ? logo.off : -80)));
+    let all = logo.done;
     pieces.forEach(p => {
       if (!p.done && t > p.delay) {
         p.v += 700 * dt; p.off += p.v * dt;
@@ -2857,16 +2865,16 @@ const INTRO = (() => {
     if (phase === 'fall' && all) { phase = 'title'; flash = 1; $('#intro-go').hidden = false; $('#intro-skip').hidden = true; if (SFX.ctx) SFX.play('start'); }
     if (flash > 0) { g.fillStyle = `rgba(255,255,255,${flash * .6})`; g.fillRect(0, 0, W, H); flash = Math.max(0, flash - dt * 2); }
     if (phase === 'title' || phase === 'coin') {
-      g.fillStyle = '#1a1c2c'; g.fillRect(W / 2 - 16, 98, 32, 14);
-      g.fillStyle = '#566c86'; g.fillRect(W / 2 - 16, 98, 32, 1); g.fillRect(W / 2 - 16, 111, 32, 1);
-      g.fillStyle = '#0b0c18'; g.fillRect(W / 2 - 1, 101, 2, 8);
-      g.fillStyle = '#b13e53'; g.fillRect(W / 2 - 3, 101, 1, 8); g.fillRect(W / 2 + 2, 101, 1, 8);
+      g.fillStyle = '#1a1c2c'; g.fillRect(W / 2 - 16, 132, 32, 14);
+      g.fillStyle = '#566c86'; g.fillRect(W / 2 - 16, 132, 32, 1); g.fillRect(W / 2 - 16, 145, 32, 1);
+      g.fillStyle = '#0b0c18'; g.fillRect(W / 2 - 1, 135, 2, 8);
+      g.fillStyle = '#b13e53'; g.fillRect(W / 2 - 3, 135, 1, 8); g.fillRect(W / 2 + 2, 135, 1, 8);
     }
     if (phase === 'title' && Math.floor(t / 450) % 2) {
-      g.font = '8px "Press Start 2P"'; g.textAlign = 'center'; g.fillStyle = '#ffcd75'; g.fillText('INSERTA MONEDA', W / 2, 92);
+      g.font = '8px "Press Start 2P"'; g.textAlign = 'center'; g.fillStyle = '#ffcd75'; g.fillText('INSERTA MONEDA', W / 2, 128);
     }
     if (phase === 'coin') {
-      const k = Math.min(1, (now - coin.t) / 650), y = -12 + (104 - -12) * k * k;
+      const k = Math.min(1, (now - coin.t) / 650), y = -12 + (138 - -12) * k * k;
       const w = Math.max(1, Math.round(Math.abs(Math.cos(now / 60)) * 5));
       if (k < 1) {
         g.fillStyle = '#b8860b'; g.fillRect(W / 2 - w - 1, Math.round(y) - 6, w * 2 + 2, 12);
@@ -2875,12 +2883,12 @@ const INTRO = (() => {
       } else if (!coin.clink) { coin.clink = now; SFX.play('coin'); }
       if (coin.clink) {
         g.font = '8px "Press Start 2P"'; g.textAlign = 'center';
-        g.fillStyle = Math.floor(now / 120) % 2 ? '#a7f070' : '#f4f4f4'; g.fillText('¡CRÉDITO 1!', W / 2, 92);
+        g.fillStyle = Math.floor(now / 120) % 2 ? '#a7f070' : '#f4f4f4'; g.fillText('¡CRÉDITO 1!', W / 2, 128);
         if (now - coin.clink > 900 && !coin.out) { coin.out = true; close(); }
       }
     }
   }
-  function skip() { if (phase !== 'fall') return; pieces.forEach(p => { p.off = 0; p.done = true; p.delay = 0; }); }
+  function skip() { if (phase !== 'fall') return; logo.off = 0; logo.done = true; pieces.forEach(p => { p.off = 0; p.done = true; p.delay = 0; }); }
   function insert() { if (phase !== 'title') return; SFX.init(); phase = 'coin'; coin = { t: performance.now() }; $('#intro-go').hidden = true; }
   function close() {
     el.classList.add('out');
