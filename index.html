@@ -11,6 +11,7 @@
   --bg:#1a1c2c; --panel:#333c57; --panel2:#29366f; --ink:#f4f4f4; --mute:#94b0c2; --dark:#0f1020;
   --red:#b13e53; --orange:#ef7d57; --yellow:#ffcd75; --lime:#a7f070; --green:#38b764; --teal:#257179;
   --blue:#3b5dc9; --sky:#41a6f6; --cyan:#73eff7; --gray:#566c86; --purple:#5d275d;
+  --felt:#0b3d2e; --felt2:#125a41; --gold:#d4af37;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -203,6 +204,40 @@ nav .btn{padding:8px 12px}
 .splash .btn{font-size:13px;padding:14px 26px;animation:blink 1.1s steps(2) infinite}
 @keyframes blink{50%{filter:brightness(1.35)}}
 @media (max-width:600px){.splash h2{font-size:18px}}
+/* Espectador / conexión */
+.spec-toggle{margin-top:6px}
+.spec-list{list-style:none;margin:8px 0 0;padding:0;max-height:240px;overflow:auto}
+.spec-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:2px dashed var(--panel2);font-size:9px}
+.spec-list li b{color:var(--cyan)}
+.spec-list li small{display:block;color:var(--mute);font-size:8px;margin-top:2px}
+.spec-list li.muted{display:block;color:var(--mute);border:0}
+.badge{background:var(--purple);padding:3px 6px;font-size:8px;display:inline-block}
+.discon{color:var(--orange)}
+
+/* Blackjack (21) */
+.bj-table{background:radial-gradient(ellipse at center, var(--felt2) 0%, var(--felt) 72%);padding:16px 10px;position:relative;box-shadow:inset 0 0 0 4px var(--gold),0 0 0 4px var(--dark)}
+.bj-dealer{text-align:center;margin-bottom:16px}
+.bj-seats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.bj-seat{background:rgba(0,0,0,.28);padding:8px;text-align:center;min-height:100px}
+.bj-seat.me{box-shadow:inset 0 0 0 2px var(--yellow)}
+.bj-seat.turn{box-shadow:inset 0 0 0 2px var(--lime)}
+.bj-seat.empty{opacity:.35}
+.bj-name{font-size:8px;color:var(--mute);margin-bottom:4px;min-height:1.4em}
+.bj-name b{color:var(--ink)}
+.bj-cards{display:flex;justify-content:center;gap:2px;flex-wrap:wrap;min-height:52px;align-items:center}
+.bj-card{width:26px;height:38px;background:#f4f4f4;position:relative;flex:none;
+  box-shadow:0 -2px 0 0 var(--dark),0 2px 0 0 var(--dark),-2px 0 0 0 var(--dark),2px 0 0 0 var(--dark)}
+.bj-card.back{background:repeating-linear-gradient(45deg,var(--red) 0 4px,#8a2f42 4px 8px)}
+.bj-card span{position:absolute;top:2px;left:2px;font-size:8px;line-height:1}
+.bj-card span.br{top:auto;left:auto;bottom:2px;right:2px}
+.bj-card.red span{color:var(--red)}
+.bj-card.black span{color:var(--dark)}
+.bj-val{font-size:9px;color:var(--yellow);margin-top:4px;min-height:1.4em}
+.bj-status{font-size:8px;margin-top:2px;min-height:1.4em}
+.bj-status.bust{color:var(--red)} .bj-status.win{color:var(--lime)} .bj-status.push{color:var(--mute)} .bj-status.bjk{color:var(--yellow)}
+.bj-ctrl{display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+.bj-chip{width:14px;height:14px;border-radius:50%;display:inline-block;background:var(--gold);box-shadow:0 0 0 2px var(--dark),inset 0 0 0 2px rgba(255,255,255,.4);vertical-align:middle}
+
 /* Easter egg */
 #egg{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(15,16,32,.92)}
 #egg img{height:min(72vh,120vw);image-rendering:pixelated;box-shadow:0 0 0 6px var(--dark),0 0 0 10px var(--yellow);animation:eggIn .35s steps(4)}
@@ -229,6 +264,7 @@ nav .btn{padding:8px 12px}
     <button class="btn tab" data-t="tiro">ANIMAL AL TIRO</button>
     <button class="btn tab" data-t="carreras">CARRERAS</button>
     <button class="btn tab" data-t="funciones">COMBATE DE FUNCIONES</button>
+    <button class="btn tab" data-t="21">21</button>
   </nav>
 
   <!-- ============ MENÚ ============ -->
@@ -281,6 +317,10 @@ nav .btn{padding:8px 12px}
           <button class="btn orange" id="bs-join">UNIRSE A SALA</button>
         </div>
         <p class="msg" id="bs-menu-msg" style="text-align:left"></p>
+        <div class="row left spec-toggle">
+          <button class="btn gray" id="bs-spec-btn">👁 SALAS EN VIVO</button>
+        </div>
+        <ul class="spec-list" id="bs-spec-list" hidden></ul>
       </div>
       <div id="bs-game" hidden>
         <div class="bs-top">
@@ -297,7 +337,7 @@ nav .btn{padding:8px 12px}
         <div class="row"><button class="btn green" id="bs-again" hidden>JUGAR DE NUEVO</button></div>
         <div class="boards">
           <div>
-            <h4>TU FLOTA</h4>
+            <h4 id="bs-mine-title">TU FLOTA</h4>
             <div id="bs-mine" class="bgrid"></div>
           </div>
           <div>
@@ -385,6 +425,19 @@ nav .btn{padding:8px 12px}
           <button class="btn orange" id="rc-join">UNIRSE</button>
         </div>
         <p class="msg" id="rc-menu-msg" style="text-align:left"></p>
+        <div class="row left spec-toggle">
+          <button class="btn gray" id="rc-spec-btn">👁 SALAS EN VIVO</button>
+        </div>
+        <ul class="spec-list" id="rc-spec-list" hidden></ul>
+      </div>
+
+      <div id="rc-spectate" hidden>
+        <div class="rc-top">
+          <span class="tag" id="rc-spec-room"></span>
+          <button class="btn gray" id="rc-spec-leave">SALIR</button>
+        </div>
+        <p class="sub" id="rc-spec-msg"></p>
+        <ol class="lb" id="rc-spec-standings"></ol>
       </div>
 
       <div id="rc-lobby" hidden>
@@ -446,6 +499,10 @@ nav .btn{padding:8px 12px}
             <button class="btn orange" id="fc-join">UNIRSE</button>
           </div>
           <p class="msg" id="fc-menu-msg" style="text-align:left"></p>
+          <div class="row left spec-toggle">
+            <button class="btn gray" id="fc-spec-btn">👁 SALAS EN VIVO</button>
+          </div>
+          <ul class="spec-list" id="fc-spec-list" hidden></ul>
         </div>
         <div id="fc-lobby" hidden>
           <div class="rc-top"><span class="tag" id="fc-room"></span><button class="btn gray" id="fc-leave">SALIR</button></div>
@@ -488,6 +545,63 @@ nav .btn{padding:8px 12px}
       <ol class="lb" id="fc-lb"></ol>
       <h4 style="margin-top:16px">CÓMO SE JUEGA</h4>
       <p class="howto">1. CADA EQUIPO COLOCA 4 PERSONAJES EN SU ZONA.<br>2. EN TU TURNO (30 s) PUEDES MOVERTE UN POCO O DISPARAR.<br>3. ESCRIBE y = f(x): LA GRÁFICA SALE DESDE TU PERSONAJE.<br>4. SI TOCA A ALGUIEN, QUEDA ELIMINADO (¡TAMBIÉN TUS AMIGOS!).<br>5. LOS OBSTÁCULOS FRENAN LA CURVA Y SE ROMPEN.<br>6. GANA EL ÚLTIMO EQUIPO EN PIE.</p>
+    </aside>
+  </section>
+
+  <!-- ============ 21 (BLACKJACK) ============ -->
+  <section class="game" id="g-21">
+    <div class="main px">
+      <div class="splash" data-g="21"><canvas width="160" height="72"></canvas><h2>CASINO 21</h2><p>SIÉNTATE A LA MESA CONTRA EL CRUPIER (CPU). LLEGA A 21 SIN PASARTE.</p><button class="btn red">INICIAR</button></div>
+      <div class="gbody" hidden>
+        <div id="bj-menu">
+          <h4>¿CÓMO QUIERES JUGAR?</h4>
+          <div class="row left"><button class="btn green" id="bj-local">JUGAR SOLO VS CRUPIER</button></div>
+          <div class="row left">
+            <button class="btn" id="bj-create">CREAR MESA ONLINE</button>
+            <input id="bj-code" class="px-in" placeholder="CÓDIGO" maxlength="5">
+            <button class="btn orange" id="bj-join">UNIRSE</button>
+          </div>
+          <p class="msg" id="bj-menu-msg" style="text-align:left"></p>
+          <div class="row left spec-toggle">
+            <button class="btn gray" id="bj-spec-btn">👁 MESAS EN VIVO</button>
+          </div>
+          <ul class="spec-list" id="bj-spec-list" hidden></ul>
+        </div>
+        <div id="bj-lobby" hidden>
+          <div class="rc-top"><span class="tag" id="bj-room"></span><button class="btn gray" id="bj-leave">SALIR</button></div>
+          <p class="sub" id="bj-lobby-msg"></p>
+          <ul class="plist" id="bj-plist"></ul>
+          <div class="row left"><button class="btn green" id="bj-go">¡REPARTIR!</button></div>
+        </div>
+        <div id="bj-game" hidden>
+          <div class="rc-top">
+            <span class="tag" id="bj-room2"></span>
+            <span id="bj-spec-badge" class="badge" hidden>👁 ESPECTADOR</span>
+            <button class="btn gray" id="bj-quit">SALIR</button>
+          </div>
+          <div class="bj-table">
+            <div class="bj-dealer">
+              <div class="bj-name">CRUPIER (CPU)</div>
+              <div class="bj-cards" id="bj-dealer-cards"></div>
+              <div class="bj-val" id="bj-dealer-val"></div>
+            </div>
+            <div class="bj-seats" id="bj-seats"></div>
+          </div>
+          <p class="msg" id="bj-msg"></p>
+          <div class="bj-ctrl" id="bj-ctrl">
+            <button class="btn green" id="bj-hit">PEDIR</button>
+            <button class="btn orange" id="bj-stand">PLANTARSE</button>
+          </div>
+          <div class="row" id="bj-again-row" hidden><button class="btn green" id="bj-again">OTRA MANO</button></div>
+        </div>
+      </div>
+    </div>
+    <aside class="side px">
+      <h3>TOP 10</h3>
+      <p class="sub">MANOS GANADAS</p>
+      <ol class="lb" id="bj-lb"></ol>
+      <h4 style="margin-top:16px">CÓMO SE JUEGA</h4>
+      <p class="howto">1. ENTRA SOLO O CREA/ÚNETE A UNA MESA (MÁX. 5).<br>2. CADA JUGADOR RECIBE 2 CARTAS; EL CRUPIER TAMBIÉN (UNA OCULTA).<br>3. EN TU TURNO: PEDIR CARTA O PLANTARTE.<br>4. TE PASAS DE 21 Y PIERDES AUTOMÁTICAMENTE.<br>5. EL CRUPIER PIDE HASTA LLEGAR A 17.<br>6. GANA QUIEN SE ACERQUE MÁS A 21 SIN PASARSE.</p>
     </aside>
   </section>
 
@@ -549,6 +663,24 @@ nameIn.addEventListener('input', () => store.set('pa_name', nameIn.value.trim().
 const playerName = () => (nameIn.value.trim().toUpperCase() || 'JUGADOR').slice(0, 10);
 const fmtT = s => { const m = Math.floor(s / 60), r = s - m * 60; return (m ? m + ':' + (r < 10 ? '0' : '') : '') + r.toFixed(m ? 1 : 2) + (m ? '' : 's'); };
 function genCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += A[(Math.random() * A.length) | 0]; return s; }
+
+/* ---------- presencia en línea (detectar desconexiones) ---------- */
+const HEARTBEAT_MS = 5000, STALE_MS = 13000;
+function presenceLoop(writeFn) {
+  writeFn();
+  const id = setInterval(writeFn, HEARTBEAT_MS);
+  return () => clearInterval(id);
+}
+function tsMillis(ts) { return ts ? (ts.toMillis ? ts.toMillis() : (ts.seconds ? ts.seconds * 1000 : 0)) : 0; }
+function isStale(ts, now) { const t = tsMillis(ts); return t > 0 && now - t > STALE_MS; }
+async function liveRooms(coll, limit = 12) {
+  if (!(await fbReady)) return [];
+  try {
+    const q = fs.query(fs.collection(db, coll), fs.orderBy('created', 'desc'), fs.limit(limit));
+    const snap = await fs.getDocs(q);
+    return snap.docs.map(d => ({ code: d.id, data: d.data() }));
+  } catch (e) { console.warn(e); return null; }
+}
 
 fbReady.then(ok => {
   const n = $('#net');
@@ -951,8 +1083,8 @@ const SHIPS = [
   { n: 'PORTAAVIONES', l: 5 }, { n: 'ACORAZADO', l: 4 }, { n: 'CRUCERO', l: 3 },
   { n: 'SUBMARINO', l: 3 }, { n: 'DESTRUCTOR', l: 2 }
 ];
-const BS = { mode: null, phase: 'menu', me: null, room: null, unsub: null, placed: [], hor: true, hover: -1, cpuTargets: [], cpuTimer: null, submitted: false };
-const G = { myBoard: '', oppBoard: '', myShots: [], oppShots: [], myTurn: false, winner: null, oppName: '', oppJoined: false, oppReady: false, meReady: false };
+const BS = { mode: null, phase: 'menu', me: null, room: null, unsub: null, placed: [], hor: true, hover: -1, cpuTargets: [], cpuTimer: null, submitted: false, hbStop: null, forfeitSent: false, spectating: false, specUnsub: null };
+const G = { myBoard: '', oppBoard: '', myShots: [], oppShots: [], myTurn: false, winner: null, oppName: '', oppJoined: false, oppReady: false, meReady: false, oppGone: false };
 
 function shipCells(start, len, hor) {
   const x = start % 10, y = (start / 10) | 0;
@@ -1011,11 +1143,12 @@ $('#bs-join').onclick = bsJoin;
 $('#bs-code').addEventListener('keydown', e => { if (e.key === 'Enter') bsJoin(); });
 
 function bsMenuMsg(t, cls = '') { const m = $('#bs-menu-msg'); m.textContent = t; m.className = 'msg ' + cls; m.style.textAlign = 'left'; }
-function resetG() { Object.assign(G, { myBoard: '', oppBoard: '', myShots: [], oppShots: [], myTurn: false, winner: null, oppName: '', oppJoined: false, oppReady: false, meReady: false }); }
+function resetG() { Object.assign(G, { myBoard: '', oppBoard: '', myShots: [], oppShots: [], myTurn: false, winner: null, oppName: '', oppJoined: false, oppReady: false, meReady: false, oppGone: false }); }
 function bsStartPlacing() {
   BS.placed = []; BS.hor = true; BS.phase = 'place'; BS.submitted = false; BS.cpuTargets = [];
   resetG();
   $('#bs-menu').hidden = true; $('#bs-game').hidden = false;
+  $('#bs-mine-title').textContent = 'TU FLOTA'; $('#bs-place').hidden = false; $('#bs-again').hidden = true;
   bsRender(); fitSoon();
 }
 function bsCpu() {
@@ -1069,12 +1202,15 @@ function bsListen() {
     if (!s.exists()) { bsLeave(); bsMenuMsg('LA SALA SE CERRÓ.', 'lose'); return; }
     onRoom(s.data());
   });
+  BS.forfeitSent = false;
+  BS.hbStop = presenceLoop(() => fs.updateDoc(fs.doc(db, 'rooms', BS.room), { [BS.me + '.lastSeen']: fs.serverTimestamp() }).catch(() => {}));
 }
 function onRoom(d) {
   const opp = BS.me === 'p1' ? 'p2' : 'p1', meD = d[BS.me] || {}, oppD = d[opp];
   G.oppJoined = !!oppD; G.oppName = oppD ? oppD.name : '';
   G.oppReady = !!(oppD && oppD.ready); G.meReady = !!meD.ready;
   G.oppBoard = (oppD && oppD.board) || '';
+  G.oppGone = !!(oppD && isStale(oppD.lastSeen, Date.now()));
   const pm = G.myShots.length, po = G.oppShots.length;
   G.myShots = d['shots_' + BS.me] || []; G.oppShots = d['shots_' + opp] || [];
   if (G.myShots.length > pm && G.oppBoard) shotSound((oppD && oppD.board) || G.oppBoard, G.myShots);
@@ -1082,11 +1218,17 @@ function onRoom(d) {
   G.myTurn = d.turn === BS.me;
   G.winner = d.winner ? (d.winner === BS.me ? 'me' : 'opp') : null;
   if (BS.phase === 'wait' && G.meReady && G.oppReady) BS.phase = 'play';
-  if (G.winner && BS.phase !== 'over') { BS.phase = 'over'; if (G.winner === 'me') bsWin(); else setTimeout(() => SFX.play('lose'), 500); }
+  if (!G.winner && G.oppGone && !BS.forfeitSent && (BS.phase === 'wait' || BS.phase === 'play')) {
+    BS.forfeitSent = true;
+    fs.updateDoc(fs.doc(db, 'rooms', BS.room), { winner: BS.me, forfeit: true }).catch(() => { BS.forfeitSent = false; });
+  }
+  if (G.winner && BS.phase !== 'over') { BS.phase = 'over'; G.forfeitWin = !!d.forfeit; if (G.winner === 'me') bsWin(); else setTimeout(() => SFX.play('lose'), 500); }
   bsRender();
 }
 function bsLeave(silent) {
   if (BS.unsub) { BS.unsub(); BS.unsub = null; }
+  if (BS.hbStop) { BS.hbStop(); BS.hbStop = null; }
+  bsSpecStop();
   clearTimeout(BS.cpuTimer);
   BS.mode = null; BS.phase = 'menu'; BS.room = null; BS.me = null;
   $('#bs-menu').hidden = false; $('#bs-game').hidden = true;
@@ -1221,11 +1363,78 @@ function bsRender() {
   } else if (BS.phase === 'play') {
     bsStatus(G.myTurn ? '¡TU TURNO! DISPARA AL TABLERO ENEMIGO' : `TURNO DE ${G.oppName || 'RIVAL'}…`);
   } else if (BS.phase === 'over') {
-    if (G.winner === 'me') bsStatus(`¡VICTORIA EN ${G.myShots.length} DISPAROS!`, 'big win');
+    if (G.winner === 'me') bsStatus(`¡VICTORIA${G.forfeitWin ? ' POR DESCONEXIÓN DEL RIVAL' : ` EN ${G.myShots.length} DISPAROS`}!`, 'big win');
     else bsStatus(`DERROTA… ${G.oppName} HUNDIÓ TU FLOTA`, 'big lose');
+  }
+  if (BS.mode === 'online' && G.oppGone && BS.phase !== 'over') {
+    $('#bs-status').innerHTML += `<br><span class="discon">⚠ ${esc(G.oppName || 'TU RIVAL')} SE DESCONECTÓ…</span>`;
   }
 }
 bsLB();
+
+/* ---- espectador ---- */
+function bsSpecStop() {
+  if (BS.specUnsub) { BS.specUnsub(); BS.specUnsub = null; }
+  BS.spectating = false;
+}
+async function bsSpecOpen(code) {
+  bsLeave(true);
+  BS.spectating = true; BS.mode = 'spectate'; BS.phase = 'spectate'; BS.room = code;
+  $('#bs-spec-list').hidden = true;
+  $('#bs-room').textContent = '👁 ESPECTADOR · SALA ' + code;
+  $('#bs-menu').hidden = true; $('#bs-game').hidden = false;
+  $('#bs-place').hidden = true; $('#bs-again').hidden = true;
+  BS.specUnsub = fs.onSnapshot(fs.doc(db, 'rooms', code), s => {
+    if (!s.exists()) { bsMenuMsg('LA SALA SE CERRÓ.', 'lose'); bsLeave(); return; }
+    bsSpecRender(s.data());
+  });
+  fitSoon();
+}
+function bsSpecRender(d) {
+  const p1 = d.p1 || {}, p2 = d.p2;
+  const b1 = p1.board || '', b2 = (p2 && p2.board) || '';
+  const s1 = d.shots_p1 || [], s2 = d.shots_p2 || [];
+  $('#bs-mine-title').textContent = p1.name ? `FLOTA DE ${esc(p1.name)}` : 'FLOTA J1';
+  $('#bs-en-title').textContent = p2 ? `FLOTA DE ${esc(p2.name)}` : 'ESPERANDO RIVAL…';
+  const sunk1 = sunkIds(b1, s2), mc = bsMineEl.children, os2 = new Set(s2);
+  for (let i = 0; i < 100; i++) {
+    let c = 'bcell';
+    if (b1[i] && b1[i] !== '.') { c += ' ship'; if (sunk1.has(b1[i])) c += ' sunk'; }
+    if (os2.has(i)) c += (b1[i] && b1[i] !== '.') ? ' hit' : ' miss';
+    mc[i].className = c;
+  }
+  const sunk2 = sunkIds(b2, s1), ec = bsEnemyEl.children, os1 = new Set(s1);
+  for (let i = 0; i < 100; i++) {
+    let c = 'bcell';
+    if (b2[i] && b2[i] !== '.') { c += ' ship'; if (sunk2.has(b2[i])) c += ' sunk'; }
+    if (os1.has(i)) c += (b2[i] && b2[i] !== '.') ? ' hit' : ' miss';
+    ec[i].className = c;
+  }
+  bsEnemyEl.classList.remove('dim');
+  $('#bs-fleet-title').textContent = 'FLOTA DE ' + (p2 ? esc(p2.name) : '???');
+  $('#bs-fleet').innerHTML = SHIPS.map((s, id) => `<li class="${sunk2.has(String(id)) ? 'sunk' : ''}"><i style="width:${s.l * 6}px"></i>${s.n}</li>`).join('');
+  let status;
+  if (!p2) status = `ESPERANDO RIVAL… SALA ${BS.room}`;
+  else if (d.winner) status = `¡${esc((d.winner === 'p1' ? p1.name : p2.name) || '???')} GANÓ!${d.forfeit ? ' (DESCONEXIÓN)' : ''}`;
+  else status = `TURNO DE ${esc((d.turn === 'p1' ? p1.name : (p2 && p2.name)) || '???')}`;
+  const now = Date.now();
+  if (isStale(p1.lastSeen, now)) status += ` · ⚠ ${esc(p1.name || 'J1')} DESCONECTADO`;
+  if (p2 && isStale(p2.lastSeen, now)) status += ` · ⚠ ${esc(p2.name || 'J2')} DESCONECTADO`;
+  bsStatus(status);
+}
+$('#bs-spec-btn').onclick = async () => {
+  const list = $('#bs-spec-list');
+  if (!list.hidden) { list.hidden = true; return; }
+  SFX.play('click'); list.hidden = false; list.innerHTML = '<li class="muted">CARGANDO…</li>';
+  const rooms = await liveRooms('rooms');
+  if (rooms === null) { list.innerHTML = '<li class="muted">NO SE PUDO CARGAR</li>'; return; }
+  const active = rooms.filter(r => r.data.p1 && r.data.p2 && !r.data.winner);
+  list.innerHTML = active.length
+    ? active.map(r => `<li><span><b>${esc(r.data.p1.name)}</b> VS <b>${esc(r.data.p2.name)}</b><small>SALA ${r.code}</small></span><button class="btn orange" data-code="${r.code}">VER</button></li>`).join('')
+    : '<li class="muted">NO HAY PARTIDAS EN VIVO AHORA</li>';
+  list.querySelectorAll('[data-code]').forEach(b => b.onclick = () => { SFX.play('click'); bsSpecOpen(b.dataset.code); });
+};
+window.addEventListener('beforeunload', () => { if (BS.mode === 'online') bsLeave(true); });
 
 /* =========================================================
    ANIMAL AL TIRO
@@ -1588,7 +1797,8 @@ function thumb(tr) { const c = document.createElement('canvas'); c.width = 96; c
 
 const rcSel = store.get('pa_rc', { c: 0, v: 0, c2: 1, v2: 1, t: 0 });
 const RC = { mode: null, phase: 'menu', players: 1, T: null, racers: [], keys: {}, touch: {}, lbTrack: rcSel.t,
-  room: null, roomData: null, roomPlayers: {}, unsubs: [], lastSend: 0, round: 0, isHost: false, submitted: false };
+  room: null, roomData: null, roomPlayers: {}, unsubs: [], lastSend: 0, round: 0, isHost: false, submitted: false,
+  hbStop: null, spectating: false, specUnsubs: [] };
 const rcv = $('#rc-cv'), rx = rcv.getContext('2d');
 rx.imageSmoothingEnabled = false;
 
@@ -1631,10 +1841,11 @@ function rcLB() {
 }
 function rcView(v) {
   fitSoon();
-  $('#rc-setup').hidden = v === 'race';
+  $('#rc-setup').hidden = v === 'race' || v === 'spectate';
   $('#rc-menu').hidden = v !== 'menu';
   $('#rc-lobby').hidden = v !== 'lobby';
   $('#rc-race').hidden = v !== 'race';
+  $('#rc-spectate').hidden = v !== 'spectate';
 }
 function rcMenuMsg(t, cls = '') { const m = $('#rc-menu-msg'); m.textContent = t; m.className = 'msg ' + cls; m.style.textAlign = 'left'; }
 
@@ -1769,7 +1980,7 @@ function rcResults() {
     ? `¡GANA ${rk.find(r => r.ctrl !== 'cpu')?.name || ''}!`
     : pos === 1 ? '¡PRIMER LUGAR!' : `LLEGASTE ${pos}º`;
   $('#rc-res-body').innerHTML = rk.map((r, i) =>
-    `<tr class="${r.ctrl === 'p1' ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${SLOTC[r.slot % 4]}"></span> ${esc(r.name)}</td><td>${r.fin != null ? fmtT(r.fin) : 'EN CARRERA'}</td><td>${r.best != null ? fmtT(r.best) : '-'}</td></tr>`).join('');
+    `<tr class="${r.ctrl === 'p1' ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${SLOTC[r.slot % 4]}"></span> ${esc(r.name)}${r.gone ? ' <span class="discon">⚠</span>' : ''}</td><td>${r.fin != null ? fmtT(r.fin) : (r.gone ? 'DESCONECTADO' : 'EN CARRERA')}</td><td>${r.best != null ? fmtT(r.best) : '-'}</td></tr>`).join('');
   $('#rc-res-msg').textContent = RC.mode === 'online' && !RC.isHost ? 'ESPERANDO A QUE EL ANFITRIÓN INICIE OTRA CARRERA…' : '';
 }
 function ordinal(n) { return n + 'º'; }
@@ -1803,6 +2014,16 @@ function rcDraw(now) {
   const w = rx.measureText(tt).width + 8;
   rx.fillStyle = 'rgba(15,16,32,.75)'; rx.fillRect(RW - 4 - w, 4, w, 13);
   rx.fillStyle = '#f4f4f4'; rx.fillText(tt, RW - 8, 14);
+  if (RC.mode === 'online') {
+    const gone = RC.racers.filter(r => r.ctrl === 'remote' && r.gone && r.fin == null);
+    if (gone.length) {
+      const txt = '⚠ ' + gone.map(r => r.name).join(', ') + ' SE DESCONECTÓ';
+      rx.textAlign = 'center'; rx.font = '7px "Press Start 2P"';
+      const w2 = rx.measureText(txt).width + 8;
+      rx.fillStyle = 'rgba(15,16,32,.8)'; rx.fillRect(RW / 2 - w2 / 2, RH - 16, w2, 12);
+      rx.fillStyle = '#ef7d57'; rx.fillText(txt, RW / 2, RH - 7);
+    }
+  }
   if (RC.phase === 'count' || (RC.phase === 'race' && now - RC.goAt < 700)) {
     const left = Math.ceil((RC.goAt - now) / 1000), s = left > 0 ? String(left) : '¡YA!';
     rx.textAlign = 'center'; rx.font = '24px "Press Start 2P"';
@@ -1890,6 +2111,7 @@ function rcEnterLobby() {
     const m = {}; s.forEach(d => m[d.id] = d.data()); RC.roomPlayers = m;
     rcOnPlayers();
   }));
+  RC.hbStop = presenceLoop(() => fs.updateDoc(rcMeDoc(), { lastSeen: fs.serverTimestamp() }).catch(() => {}));
 }
 function rcOnRoom() {
   const d = RC.roomData;
@@ -1906,10 +2128,12 @@ function rcOnRoom() {
   rcLobbyRender();
 }
 function rcOnPlayers() {
+  const now = Date.now();
   for (const r of RC.racers) {
     if (r.ctrl !== 'remote') continue;
     const p = RC.roomPlayers[r.id];
     if (!p) { r.gone = true; continue; }
+    r.gone = isStale(p.lastSeen, now);
     if (p.round !== RC.round) continue;
     r.tx = p.x; r.ty = p.y; r.ta = p.a; r.total = p.total; r.lapsDone = p.lapsDone; r.fin = p.fin; r.best = p.best;
   }
@@ -1920,15 +2144,16 @@ function rcOnPlayers() {
 }
 function rcLobbyRender() {
   if (RC.mode !== 'online') return;
-  const list = Object.entries(RC.roomPlayers).sort((a, b) => a[1].slot - b[1].slot);
+  const list = Object.entries(RC.roomPlayers).sort((a, b) => a[1].slot - b[1].slot), now = Date.now();
   const ul = $('#rc-plist'); ul.innerHTML = '';
   list.forEach(([uid, p]) => {
     const li = document.createElement('li');
     li.innerHTML = `<span class="dot" style="background:${SLOTC[p.slot % 4]}"></span>`;
     li.appendChild(scaled(portrait(p.char), 2));
     li.appendChild(scaled(vspr(p.char, p.veh), 2));
+    const gone = uid !== UID && isStale(p.lastSeen, now);
     const s = document.createElement('span');
-    s.innerHTML = `${esc(p.name)}${uid === UID ? ' (TÚ)' : ''}${RC.roomData && uid === RC.roomData.host ? ' ★' : ''}<br><small>${CHARS[p.char].n} · ${VEH[p.veh].n}</small>`;
+    s.innerHTML = `${esc(p.name)}${uid === UID ? ' (TÚ)' : ''}${RC.roomData && uid === RC.roomData.host ? ' ★' : ''}${gone ? ' <span class="discon">⚠ DESCONECTADO</span>' : ''}<br><small>${CHARS[p.char].n} · ${VEH[p.veh].n}</small>`;
     li.appendChild(s); ul.appendChild(li);
   });
   const tn = RC.roomData ? RTRACKS[RC.roomData.track].n : '';
@@ -1945,6 +2170,7 @@ async function rcStartOnline() {
 }
 function rcLeaveOnline() {
   RC.unsubs.forEach(u => u()); RC.unsubs = [];
+  if (RC.hbStop) { RC.hbStop(); RC.hbStop = null; }
   if (RC.room && fs) {
     const room = RC.room, others = Object.keys(RC.roomPlayers).filter(u => u !== UID);
     if (RC.isHost && others.length) fs.updateDoc(fs.doc(db, 'races', room), { host: others[0] }).catch(() => {});
@@ -1952,6 +2178,48 @@ function rcLeaveOnline() {
   }
   RC.room = null; RC.roomData = null; RC.roomPlayers = {}; RC.isHost = false; RC.round = 0;
 }
+/* ---- espectador ---- */
+function rcSpecStop() {
+  RC.specUnsubs.forEach(u => u()); RC.specUnsubs = [];
+  RC.spectating = false;
+}
+async function rcSpecOpen(code) {
+  rcToMenu(); rcSpecStop();
+  RC.spectating = true; RC.room = code;
+  $('#rc-spec-list').hidden = true;
+  $('#rc-spec-room').textContent = '👁 ESPECTADOR · SALA ' + code;
+  rcView('spectate');
+  let roomData = null, players = {};
+  const render = () => {
+    if (!roomData) return;
+    const rk = Object.entries(players).sort((a, b) => (b[1].total || -999) - (a[1].total || -999));
+    const now = Date.now();
+    $('#rc-spec-standings').innerHTML = rk.length ? rk.map(([uid, p], i) => {
+      const gone = isStale(p.lastSeen, now);
+      return `<li><span class="rk">${i + 1}.</span><span class="nm">${esc(p.name)}${gone ? ' <span class="discon">⚠</span>' : ''}</span><span class="sc">${p.fin != null ? fmtT(p.fin) : (p.lapsDone >= 0 ? 'VUELTA ' + (p.lapsDone + 1) : '-')}</span></li>`;
+    }).join('') : '<li class="muted">SIN JUGADORES</li>';
+    $('#rc-spec-msg').textContent = `CIRCUITO: ${RTRACKS[roomData.track] ? RTRACKS[roomData.track].n : '?'} · ${roomData.state === 'lobby' ? 'EN LOBBY' : 'EN CARRERA'}`;
+  };
+  RC.specUnsubs.push(fs.onSnapshot(fs.doc(db, 'races', code), s => {
+    if (!s.exists()) { $('#rc-spec-msg').textContent = 'LA SALA SE CERRÓ.'; return; }
+    roomData = s.data(); render();
+  }));
+  RC.specUnsubs.push(fs.onSnapshot(fs.collection(db, 'races', code, 'players'), s => {
+    const m = {}; s.forEach(d => m[d.id] = d.data()); players = m; render();
+  }));
+}
+$('#rc-spec-leave').onclick = () => { rcSpecStop(); rcToMenu(); };
+$('#rc-spec-btn').onclick = async () => {
+  const list = $('#rc-spec-list');
+  if (!list.hidden) { list.hidden = true; return; }
+  SFX.play('click'); list.hidden = false; list.innerHTML = '<li class="muted">CARGANDO…</li>';
+  const rooms = await liveRooms('races');
+  if (rooms === null) { list.innerHTML = '<li class="muted">NO SE PUDO CARGAR</li>'; return; }
+  list.innerHTML = rooms.length
+    ? rooms.map(r => `<li><span><b>SALA ${r.code}</b><small>${RTRACKS[r.data.track] ? RTRACKS[r.data.track].n : '?'} · ${r.data.state === 'lobby' ? 'EN LOBBY' : 'EN CARRERA'}</small></span><button class="btn orange" data-code="${r.code}">VER</button></li>`).join('')
+    : '<li class="muted">NO HAY SALAS RECIENTES</li>';
+  list.querySelectorAll('[data-code]').forEach(b => b.onclick = () => { SFX.play('click'); rcSpecOpen(b.dataset.code); });
+};
 function rcToMenu() {
   if (RC.mode === 'online') rcLeaveOnline();
   RC.mode = null; RC.phase = 'menu'; RC.racers = []; RC.T = null;
@@ -2095,7 +2363,7 @@ const FC = {
   mode: null, fmt: store.get('pa_fc_fmt', '1v1'), ffaN: 4, track: store.get('pa_fc_track', 0), phase: 'menu',
   seats: [], turn: null, ptr: [], turnN: 0, tEnd: 0, moveLeft: MOVE, dir: 1, holes: [], terrain: null, img: null,
   anim: null, fx: [], placeSeat: 0, mv: {}, mouse: null, room: null, roomData: null, roomPlayers: {}, unsubs: [], me: 0,
-  isHost: false, lastSend: 0, turnSeenAt: 0, won: false
+  isHost: false, lastSend: 0, turnSeenAt: 0, won: false, hbStop: null, spectating: false, elimSent: null
 };
 if (!FC_FMT[FC.fmt]) FC.fmt = '1v1';
 const fcv = $('#fc-cv'), fx = fcv.getContext('2d');
@@ -2245,7 +2513,7 @@ function fcMsg(t, cls = '') { const m = $('#fc-msg'); m.textContent = t; m.class
 function fcLB() { LB.render($('#fc-lb'), 'funciones', false, r => `${r.score} ${r.score === 1 ? 'VICTORIA' : 'VICTORIAS'}${r.extra ? `<small>${esc(r.extra)}</small>` : ''}`); }
 
 function fcUI() {
-  const place = FC.phase === 'place', play = FC.phase === 'play' || FC.phase === 'anim' || FC.phase === 'wait';
+  const place = FC.phase === 'place' && !FC.spectating, play = (FC.phase === 'play' || FC.phase === 'anim' || FC.phase === 'wait') && !FC.spectating;
   $('#fc-place').hidden = !place;
   $('#fc-ctrl').hidden = !play;
   const mine = fcMine();
@@ -2253,7 +2521,9 @@ function fcUI() {
   document.querySelectorAll('#fc-ctrl .mv .btn').forEach(b => b.disabled = !mine);
   $('#fc-dir').textContent = FC.dir > 0 ? 'DER ▶' : '◀ IZQ';
   let turnTxt = '';
-  if (place) {
+  if (FC.spectating && FC.phase === 'place') {
+    turnTxt = '👁 MODO ESPECTADOR: LOS JUGADORES ESTÁN COLOCANDO SUS PERSONAJES…';
+  } else if (place) {
     const s = FC.mode === 'local' ? FC.placeSeat : FC.me, seat = FC.seats[s], per = FC_FMT[FC.fmt].per;
     turnTxt = `<span style="color:${TEAMC[seat.team]}">${esc(seat.name)}</span>: COLOCA ${per - seat.units.length} PERSONAJE(S) EN TU ZONA`;
     $('#fc-ready').hidden = FC.mode === 'local';
@@ -2262,6 +2532,14 @@ function fcUI() {
   } else if (FC.turn) {
     const seat = FC.seats[FC.turn.seat];
     turnTxt = `TURNO: <span style="color:${TEAMC[seat.team]}">${esc(seat.name)}</span> · PERSONAJE ${FC.turn.unit + 1}${mine && FC.mode === 'online' ? ' (TÚ)' : ''}`;
+  }
+  if (FC.mode === 'online' && FC.roomData && FC.roomData.order && FC.phase !== 'place') {
+    const now = Date.now();
+    const goneNames = FC.roomData.order
+      .map((uid, i) => ({ p: FC.roomPlayers[uid], seat: FC.seats[i] }))
+      .filter(({ p, seat }) => seat && seat.units.some(u => u.alive) && (!p || isStale(p.lastSeen, now)))
+      .map(({ seat }) => seat.name);
+    if (goneNames.length) turnTxt += ` <span class="discon">⚠ ${esc(goneNames.join(', '))} DESCONECTADO</span>`;
   }
   $('#fc-turn').innerHTML = turnTxt;
   fitSoon();
@@ -2358,6 +2636,7 @@ function fcApplyKills(kills) {
   kills.forEach(k => { const [a, b] = k.split(':').map(Number); const u = FC.seats[a] && FC.seats[a].units[b]; if (u && u.alive) { u.alive = false; FC.fx.push({ x: u.x, y: u.y, t: performance.now(), kind: 'ko', team: FC.seats[a].team }); } });
 }
 function fcAnimate(shot, done) {
+  if (shot && shot.disco) { SFX.play('miss'); fcMsg(`⚠ ${shot.seatName} SE DESCONECTÓ Y FUE ELIMINADO`, 'lose'); setTimeout(done, 900); return; }
   if (!shot) { SFX.play('miss'); fcMsg('¡SE ACABÓ EL TIEMPO!'); setTimeout(done, 500); return; }
   let pts = [[shot.x0, shot.y0]];
   try {
@@ -2371,6 +2650,31 @@ function fcAnimate(shot, done) {
   FC.anim = { pts, shot, t0: performance.now(), dur: Math.min(2600, Math.max(700, len * 45)), done, team: FC.seats[shot.seat].team, fin: false };
   fcMsg(`${FC.seats[shot.seat].name}: y = ${shot.expr}`);
   SFX.play('spit');
+}
+function fcHostCheckDisconnects(now) {
+  if (!FC.isHost || FC.mode !== 'online' || FC.phase !== 'play' || !FC.roomData || !FC.roomData.order) return;
+  if (FC._lastDC && now - FC._lastDC < 2500) return;
+  FC._lastDC = now;
+  if (!FC.elimSent) FC.elimSent = new Set();
+  let victimSeat = -1, victimName = '';
+  for (let si = 0; si < FC.seats.length; si++) {
+    if (FC.elimSent.has(si)) continue;
+    const uid = FC.roomData.order[si], p = FC.roomPlayers[uid];
+    const gone = !p || isStale(p.lastSeen, now);
+    if (gone && FC.seats[si].units.some(u => u.alive)) { victimSeat = si; victimName = FC.seats[si].name; break; }
+  }
+  if (victimSeat < 0) return;
+  FC.elimSent.add(victimSeat);
+  const seats = FC.seats.map(s => ({ ...s, units: s.units.map(u => ({ ...u })) }));
+  const kills = [];
+  seats[victimSeat].units.forEach((u, ui) => { if (u.alive) { u.alive = false; kills.push(victimSeat + ':' + ui); } });
+  let turn = FC.turn, ptr = FC.ptr;
+  if (turn && turn.seat === victimSeat) { const r = fcNextTurn(seats, ptr, turn); turn = r.turn; ptr = r.ptr; }
+  const teams = fcTeamsAlive(seats), over = teams.size <= 1;
+  const winner = over ? (teams.size ? [...teams][0] : -1) : null;
+  const upd = { turnN: FC.turnN + 1, turn: turn || null, ptr, shot: { disco: true, seatName: victimName, n: FC.turnN }, dead: fs.arrayUnion(...kills) };
+  if (over) { upd.state = 'over'; upd.winner = winner; }
+  fs.updateDoc(fs.doc(db, 'fights', FC.room), upd).catch(console.error);
 }
 function fcOver(winner) {
   FC.phase = 'over'; FC.turn = null; fcUI();
@@ -2409,6 +2713,7 @@ function fcUpdate(dt, now) {
     const gone = uid && !FC.roomPlayers[uid];
     if (FC.turn.seat !== FC.me && (gone && now - FC.turnSeenAt > 1500 || now - FC.turnSeenAt > (TURN_S + 8) * 1000)) { FC.turnSeenAt = now; fcCommit(null); }
   }
+  fcHostCheckDisconnects(now);
   if (FC.anim && !FC.anim.fin && now - FC.anim.t0 >= FC.anim.dur) {
     FC.anim.fin = true;
     const a = FC.anim;
@@ -2426,7 +2731,7 @@ function fcUpdate(dt, now) {
 function fcDraw(now) {
   if (!FC.img) return;
   fx.drawImage(FC.img, 0, 0);
-  if (FC.phase === 'place') {
+  if (FC.phase === 'place' && !FC.spectating) {
     const s = FC.mode === 'local' ? FC.placeSeat : FC.me, z = fcZone(FC.fmt, s);
     fx.fillStyle = TEAMC[FC.seats[s].team]; fx.globalAlpha = .16 + .06 * Math.sin(now / 250);
     fx.fillRect(wx2p(z[0]), wy2p(z[3]), (z[1] - z[0]) * SC, (z[3] - z[2]) * SC);
@@ -2462,6 +2767,27 @@ function fcDraw(now) {
     fx.restore();
     if (act && blink) { fx.fillStyle = TEAMC[s.team]; fx.fillRect(px - 2, py - 11, 5, 1); fx.fillRect(px - 1, py - 10, 3, 1); fx.fillRect(px, py - 9, 1, 1); }
   }));
+  // cuadro de diálogo: el personaje "grita" su función al disparar
+  if (FC.anim && FC.anim.shot && !FC.anim.shot.disco) {
+    const shot = FC.anim.shot, pop = Math.min(1, (now - FC.anim.t0) / 220), s = pop < 1 ? .5 + .5 * pop : 1;
+    const px = wx2p(shot.x0), py = wy2p(shot.y0);
+    const text = 'y = ' + shot.expr;
+    fx.font = '8px "Press Start 2P"';
+    const bw = Math.min(180, fx.measureText(text).width + 10), bh = 14;
+    let bx = px - bw / 2; bx = Math.max(2, Math.min(FW - bw - 2, bx));
+    const by = Math.max(2, py - bh - 12);
+    fx.save();
+    fx.translate(bx + bw / 2, by + bh); fx.scale(s, s); fx.translate(-(bx + bw / 2), -(by + bh));
+    fx.fillStyle = '#f4f4f4'; fx.fillRect(bx, by, bw, bh);
+    fx.fillStyle = TEAMC[FC.anim.team];
+    fx.fillRect(bx, by, bw, 2); fx.fillRect(bx, by + bh - 2, bw, 2); fx.fillRect(bx, by, 2, bh); fx.fillRect(bx + bw - 2, by, 2, bh);
+    const tailX = Math.max(bx + 6, Math.min(bx + bw - 6, px));
+    fx.fillStyle = '#f4f4f4';
+    fx.beginPath(); fx.moveTo(tailX - 4, by + bh); fx.lineTo(tailX + 4, by + bh); fx.lineTo(tailX, by + bh + 6); fx.closePath(); fx.fill();
+    fx.fillStyle = '#1a1c2c'; fx.textAlign = 'left';
+    fx.fillText(text.length * 6 > bw ? text.slice(0, Math.floor(bw / 6)) : text, bx + 5, by + 10);
+    fx.restore();
+  }
   // efectos
   FC.fx = FC.fx.filter(e => now - e.t < 700);
   FC.fx.forEach(e => {
@@ -2485,7 +2811,7 @@ function fcDraw(now) {
 function fcCanvasPos(e) { const r = fcv.getBoundingClientRect(); return [p2wx((e.clientX - r.left) / r.width * FW), p2wy((e.clientY - r.top) / r.height * FH)]; }
 fcv.addEventListener('pointermove', e => { FC.mouse = fcCanvasPos(e); });
 fcv.addEventListener('pointerleave', () => { FC.mouse = null; });
-fcv.addEventListener('pointerdown', e => { if (FC.phase === 'place') { const p = fcCanvasPos(e); fcTryPlace(p[0], p[1]); } });
+fcv.addEventListener('pointerdown', e => { if (FC.phase === 'place' && !FC.spectating) { const p = fcCanvasPos(e); fcTryPlace(p[0], p[1]); } });
 
 /* ---- online ---- */
 function fcSendUnits() {
@@ -2526,12 +2852,19 @@ async function fcJoin() {
 }
 function fcEnterLobby() {
   FC.mode = 'online'; FC.phase = 'lobby'; FC.roomData = null; FC.roomPlayers = {};
-  fcMenuMsg(''); $('#fc-room').textContent = 'SALA ' + FC.room;
+  fcMenuMsg(''); $('#fc-room').textContent = (FC.spectating ? '👁 ESPECTADOR · SALA ' : 'SALA ') + FC.room;
   fcView('lobby'); fcSetupRender(); fcLobbyRender();
-  FC.unsubs.push(fs.onSnapshot(fs.doc(db, 'fights', FC.room), s => { if (s.exists()) { FC.roomData = s.data(); fcSync(); } }));
+  FC.unsubs.push(fs.onSnapshot(fs.doc(db, 'fights', FC.room), s => { if (s.exists()) { FC.roomData = s.data(); fcSync(); } else if (FC.spectating) { fcMenuMsg('LA SALA SE CERRÓ.', 'lose'); fcToMenu(); } }));
   FC.unsubs.push(fs.onSnapshot(fs.collection(db, 'fights', FC.room, 'players'), s => {
     const m = {}; s.forEach(d => m[d.id] = d.data()); FC.roomPlayers = m; fcSyncPlayers(); fcSync();
   }));
+  if (!FC.spectating) FC.hbStop = presenceLoop(() => fs.updateDoc(fs.doc(db, 'fights', FC.room, 'players', UID), { lastSeen: fs.serverTimestamp() }).catch(() => {}));
+}
+async function fcSpecOpen(code) {
+  fcToMenu();
+  FC.spectating = true; FC.room = code;
+  $('#fc-spec-list').hidden = true;
+  fcEnterLobby();
 }
 function fcSeatsFromOrder(d) {
   return d.order.map((uid, i) => {
@@ -2556,7 +2889,7 @@ function fcSync() {
   if (d.state === 'lobby') {
     if (FC.phase !== 'lobby') {
       FC.phase = 'lobby'; FC.seats = []; FC.anim = null;
-      fs.updateDoc(fs.doc(db, 'fights', FC.room, 'players', UID), { units: [], ready: false }).catch(() => {});
+      if (!FC.spectating) fs.updateDoc(fs.doc(db, 'fights', FC.room, 'players', UID), { units: [], ready: false }).catch(() => {});
       $('#fc-over').hidden = true; fcView('lobby'); fcSetupRender();
     }
     fcLobbyRender(); return;
@@ -2576,6 +2909,7 @@ function fcSync() {
     return;
   }
   if ((d.state === 'play' || d.state === 'over') && (FC.phase === 'place' || FC.phase === 'lobby')) {
+    FC.elimSent = new Set();
     FC.seats = fcSeatsFromOrder(d); FC.holes = d.holes || []; fcTerrain();
     FC.turn = d.turn; FC.ptr = d.ptr; FC.turnN = d.turnN;
     fcView('game');
@@ -2619,20 +2953,33 @@ async function fcGoOnline() {
 }
 function fcLeaveOnline() {
   FC.unsubs.forEach(u => u()); FC.unsubs = [];
-  if (FC.room && fs) {
+  if (FC.hbStop) { FC.hbStop(); FC.hbStop = null; }
+  if (FC.room && fs && !FC.spectating) {
     const room = FC.room, others = Object.keys(FC.roomPlayers).filter(u => u !== UID);
     if (FC.isHost && others.length) fs.updateDoc(fs.doc(db, 'fights', room), { host: others[0] }).catch(() => {});
     fs.deleteDoc(fs.doc(db, 'fights', room, 'players', UID)).catch(() => {});
   }
-  FC.room = null; FC.roomData = null; FC.roomPlayers = {}; FC.isHost = false;
+  FC.room = null; FC.roomData = null; FC.roomPlayers = {}; FC.isHost = false; FC.spectating = false;
 }
 function fcToMenu() {
   if (FC.mode === 'online') fcLeaveOnline();
-  FC.mode = null; FC.phase = 'menu'; FC.seats = []; FC.turn = null; FC.anim = null;
+  FC.mode = null; FC.phase = 'menu'; FC.seats = []; FC.turn = null; FC.anim = null; FC.spectating = false;
   $('#fc-over').hidden = true;
   fcView('menu'); fcSetupRender();
 }
 
+$('#fc-spec-btn').onclick = async () => {
+  const list = $('#fc-spec-list');
+  if (!list.hidden) { list.hidden = true; return; }
+  SFX.play('click'); list.hidden = false; list.innerHTML = '<li class="muted">CARGANDO…</li>';
+  const rooms = await liveRooms('fights');
+  if (rooms === null) { list.innerHTML = '<li class="muted">NO SE PUDO CARGAR</li>'; return; }
+  const stateN = { lobby: 'EN LOBBY', place: 'COLOCANDO', play: 'EN COMBATE', over: 'TERMINADA' };
+  list.innerHTML = rooms.length
+    ? rooms.map(r => `<li><span><b>SALA ${r.code}</b><small>${FC_FMT[r.data.fmt] ? FC_FMT[r.data.fmt].n : '?'} · ${stateN[r.data.state] || r.data.state}</small></span><button class="btn orange" data-code="${r.code}">VER</button></li>`).join('')
+    : '<li class="muted">NO HAY SALAS RECIENTES</li>';
+  list.querySelectorAll('[data-code]').forEach(b => b.onclick = () => { SFX.play('click'); fcSpecOpen(b.dataset.code); });
+};
 $('#fc-local').onclick = () => { SFX.play('start'); fcStartLocal(); };
 $('#fc-create').onclick = fcCreate;
 $('#fc-join').onclick = fcJoin;
@@ -2662,6 +3009,360 @@ document.querySelectorAll('#fc-ctrl [data-m]').forEach(b => {
 document.querySelectorAll('#fc-help [data-ex]').forEach(b => b.onclick = () => { if (!$('#fc-fx').disabled) { $('#fc-fx').value = b.dataset.ex; SFX.play('click'); } });
 window.addEventListener('beforeunload', () => { if (FC.mode === 'online') fcLeaveOnline(); });
 fcSetupRender(); fcLB(); fcView('menu');
+
+/* =========================================================
+   21 (BLACKJACK) — mesa de casino, hasta 5 jugadores + crupier CPU
+   ========================================================= */
+const BJ_SUITS = { S: { sym: '♠', red: false }, H: { sym: '♥', red: true }, D: { sym: '♦', red: true }, C: { sym: '♣', red: false } };
+const BJ_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+function bjFreshDeck() { const d = []; for (const s in BJ_SUITS) for (const r of BJ_RANKS) d.push(r + s); return d; }
+function bjShuffle(d) { const a = [...d]; for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; }
+function bjRank(card) { return card.slice(0, -1); }
+function bjSuit(card) { return card.slice(-1); }
+function bjVal(card) { const r = bjRank(card); if (r === 'A') return 11; if (r === 'J' || r === 'Q' || r === 'K') return 10; return +r; }
+function bjHandValue(hand) {
+  let sum = 0, aces = 0;
+  hand.forEach(c => { sum += bjVal(c); if (bjRank(c) === 'A') aces++; });
+  while (sum > 21 && aces > 0) { sum -= 10; aces--; }
+  return sum;
+}
+function bjIsBlackjack(hand) { return hand.length === 2 && bjHandValue(hand) === 21; }
+function bjResult(hand, dealerHand) {
+  const pv = bjHandValue(hand), dv = bjHandValue(dealerHand);
+  if (pv > 21) return 'bust';
+  const playerBJ = bjIsBlackjack(hand), dealerBJ = bjIsBlackjack(dealerHand);
+  if (playerBJ && dealerBJ) return 'push';
+  if (playerBJ) return 'blackjack';
+  if (dealerBJ) return 'lose';
+  if (dv > 21) return 'win';
+  if (pv > dv) return 'win';
+  if (pv < dv) return 'lose';
+  return 'push';
+}
+function bjCardEl(card, hidden) {
+  const d = document.createElement('div');
+  if (hidden || !card) { d.className = 'bj-card back'; return d; }
+  const suit = bjSuit(card), info = BJ_SUITS[suit], rank = bjRank(card);
+  d.className = 'bj-card ' + (info.red ? 'red' : 'black');
+  d.innerHTML = `<span>${rank}${info.sym}</span><span class="br">${rank}${info.sym}</span>`;
+  return d;
+}
+function bjHandEl(handEl, hand, hideLast) {
+  handEl.innerHTML = '';
+  hand.forEach((c, i) => handEl.appendChild(bjCardEl(c, hideLast && i === hand.length - 1)));
+}
+function bjMsg(t, cls = '') { const m = $('#bj-msg'); m.textContent = t; m.className = 'msg ' + cls; }
+function bjMenuMsg(t, cls = '') { const m = $('#bj-menu-msg'); m.textContent = t; m.className = 'msg ' + cls; m.style.textAlign = 'left'; }
+function bjLB() { LB.render($('#bj-lb'), 'veintiuno', false, r => `${r.score} ${r.score === 1 ? 'MANO' : 'MANOS'}`); }
+function bjShowResult(res) {
+  const m = { win: '¡GANASTE!', blackjack: '¡BLACKJACK! GANASTE', lose: 'PERDISTE', push: 'EMPATE', bust: 'TE PASASTE DE 21 · PERDISTE' };
+  bjMsg(m[res] || '', res === 'win' || res === 'blackjack' ? 'win' : (res === 'push' ? '' : 'lose'));
+}
+function bjView(v) {
+  $('#bj-menu').hidden = v !== 'menu';
+  $('#bj-lobby').hidden = v !== 'lobby';
+  $('#bj-game').hidden = v !== 'game';
+  fitSoon();
+}
+
+const BJ = {
+  mode: null, phase: 'menu', spectating: false,
+  room: null, isHost: false, roomData: null, roomPlayers: {}, unsubs: [], hbStop: null, _hostTimer: null, _dealerRunning: false,
+  round: 0, resultShown: false,
+  deck: [], hand: [], dealer: [], dealerHidden: true, status: 'playing', dealTimer: null
+};
+
+/* ---- solo vs crupier ---- */
+function bjLocalDeal() {
+  bjLeaveOnline();
+  BJ.mode = 'local'; BJ.spectating = false;
+  BJ.deck = bjShuffle(bjFreshDeck());
+  BJ.hand = [BJ.deck.pop(), BJ.deck.pop()];
+  BJ.dealer = [BJ.deck.pop(), BJ.deck.pop()];
+  BJ.dealerHidden = true;
+  BJ.status = bjIsBlackjack(BJ.hand) ? 'blackjack' : 'playing';
+  BJ.phase = 'play';
+  bjView('game'); $('#bj-room2').textContent = 'SOLO VS CRUPIER'; $('#bj-spec-badge').hidden = true;
+  $('#bj-ctrl').hidden = false; $('#bj-again-row').hidden = true;
+  bjMsg('');
+  bjRenderLocal();
+  if (BJ.status !== 'playing') bjLocalResolveDealer();
+}
+function bjLocalHit() {
+  if (BJ.mode !== 'local' || BJ.status !== 'playing') return;
+  BJ.hand.push(BJ.deck.pop());
+  const v = bjHandValue(BJ.hand);
+  if (v > 21) BJ.status = 'bust'; else if (v === 21) BJ.status = 'stand';
+  SFX.play('click'); bjRenderLocal();
+  if (BJ.status !== 'playing') bjLocalResolveDealer();
+}
+function bjLocalStand() {
+  if (BJ.mode !== 'local' || BJ.status !== 'playing') return;
+  BJ.status = 'stand'; SFX.play('click'); bjRenderLocal(); bjLocalResolveDealer();
+}
+function bjLocalResolveDealer() {
+  BJ.dealerHidden = false; bjRenderLocal();
+  const step = () => {
+    const v = bjHandValue(BJ.dealer);
+    if (BJ.status !== 'bust' && v < 17) { BJ.dealer.push(BJ.deck.pop()); bjRenderLocal(); BJ.dealTimer = setTimeout(step, 700); }
+    else bjLocalFinish();
+  };
+  BJ.dealTimer = setTimeout(step, 700);
+}
+function bjLocalFinish() {
+  BJ.phase = 'over';
+  const res = bjResult(BJ.hand, BJ.dealer);
+  bjRenderLocal(); bjShowResult(res);
+  if (res === 'win' || res === 'blackjack') { SFX.play('win'); LB.increment('veintiuno').then(bjLB); }
+  else if (res === 'push') SFX.play('click'); else SFX.play('lose');
+  $('#bj-ctrl').hidden = true; $('#bj-again-row').hidden = false;
+}
+function bjRenderLocal() {
+  bjHandEl($('#bj-dealer-cards'), BJ.dealer, BJ.dealerHidden);
+  $('#bj-dealer-val').textContent = BJ.dealerHidden ? '' : 'VALOR: ' + bjHandValue(BJ.dealer);
+  const seats = $('#bj-seats'); seats.innerHTML = '';
+  const seat = document.createElement('div');
+  seat.className = 'bj-seat me' + (BJ.status === 'playing' ? ' turn' : '');
+  seat.innerHTML = `<div class="bj-name"><b>${esc(playerName())}</b></div>`;
+  const cardsEl = document.createElement('div'); cardsEl.className = 'bj-cards';
+  bjHandEl(cardsEl, BJ.hand, false);
+  seat.appendChild(cardsEl);
+  const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = 'VALOR: ' + bjHandValue(BJ.hand);
+  seat.appendChild(val);
+  const statusTxt = { playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[BJ.status] || '';
+  const st = document.createElement('div'); st.className = 'bj-status' + (BJ.status === 'bust' ? ' bust' : BJ.status === 'blackjack' ? ' bjk' : '');
+  st.textContent = statusTxt; seat.appendChild(st);
+  seats.appendChild(seat);
+  $('#bj-hit').disabled = BJ.status !== 'playing'; $('#bj-stand').disabled = BJ.status !== 'playing';
+  fitSoon();
+}
+
+/* ---- mesa online ---- */
+function bjSeatList() { return Object.entries(BJ.roomPlayers).sort((a, b) => a[1].slot - b[1].slot); }
+function bjTurnUid() { for (const [uid, p] of bjSeatList()) if (p.status === 'playing') return uid; return null; }
+async function bjCreate() {
+  if (!(await fbReady)) return bjMenuMsg('SIN CONEXIÓN A FIREBASE: SOLO SE PUEDE JUGAR SOLO.', 'lose');
+  bjLeaveOnline(); bjMenuMsg('CREANDO MESA…');
+  try {
+    let code, ref;
+    for (let k = 0; k < 5; k++) { code = genCode(); ref = fs.doc(db, 'blackjack', code); if (!(await fs.getDoc(ref)).exists()) break; }
+    await fs.setDoc(ref, { host: UID, state: 'lobby', deck: [], dealerHand: [], dealerHidden: true, round: 0, created: fs.serverTimestamp() });
+    BJ.room = code;
+    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot: 0, hand: [], status: 'waiting', joined: fs.serverTimestamp() });
+    bjEnterLobby();
+  } catch (e) { console.error(e); BJ.room = null; bjMenuMsg('ERROR AL CREAR MESA: ' + e.message, 'lose'); }
+}
+async function bjJoin() {
+  const code = $('#bj-code').value.trim().toUpperCase();
+  if (code.length < 5) return bjMenuMsg('ESCRIBE EL CÓDIGO DE 5 LETRAS.', 'lose');
+  if (!(await fbReady)) return bjMenuMsg('SIN CONEXIÓN A FIREBASE: SOLO SE PUEDE JUGAR SOLO.', 'lose');
+  bjLeaveOnline(); bjMenuMsg('ENTRANDO…');
+  try {
+    const d = await fs.getDoc(fs.doc(db, 'blackjack', code));
+    if (!d.exists()) throw new Error('ESA MESA NO EXISTE');
+    const ps = await fs.getDocs(fs.collection(db, 'blackjack', code, 'players'));
+    const used = new Set(); let mine = false;
+    ps.forEach(p => { if (p.id === UID) mine = true; else used.add(p.data().slot); });
+    if (!mine && used.size >= 5) throw new Error('LA MESA ESTÁ LLENA (MÁX. 5)');
+    let slot = 0; while (used.has(slot)) slot++;
+    BJ.room = code;
+    await fs.setDoc(fs.doc(db, 'blackjack', code, 'players', UID), { name: playerName(), slot, hand: [], status: 'waiting', joined: fs.serverTimestamp() });
+    bjEnterLobby();
+  } catch (e) { BJ.room = null; bjMenuMsg(e.message, 'lose'); }
+}
+function bjEnterLobby() {
+  BJ.mode = 'online'; BJ.phase = 'lobby'; BJ.roomData = null; BJ.roomPlayers = {}; BJ.round = 0; BJ.resultShown = false;
+  bjMenuMsg(''); $('#bj-room').textContent = (BJ.spectating ? '👁 ESPECTADOR · MESA ' : 'MESA ') + BJ.room;
+  bjView('lobby'); bjLobbyRender();
+  BJ.unsubs.push(fs.onSnapshot(fs.doc(db, 'blackjack', BJ.room), s => {
+    if (!s.exists()) { if (BJ.spectating) { bjMenuMsg('LA MESA SE CERRÓ.', 'lose'); bjToMenu(); } return; }
+    BJ.roomData = s.data(); bjSync();
+  }));
+  BJ.unsubs.push(fs.onSnapshot(fs.collection(db, 'blackjack', BJ.room, 'players'), s => {
+    const m = {}; s.forEach(d => m[d.id] = d.data()); BJ.roomPlayers = m; bjSync();
+  }));
+  if (!BJ.spectating) BJ.hbStop = presenceLoop(() => fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', UID), { lastSeen: fs.serverTimestamp() }).catch(() => {}));
+  BJ._hostTimer = setInterval(bjHostPoll, 3000);
+}
+async function bjSpecOpen(code) {
+  bjToMenu();
+  BJ.spectating = true; BJ.room = code;
+  $('#bj-spec-list').hidden = true;
+  bjEnterLobby();
+}
+function bjLobbyRender() {
+  if (BJ.mode !== 'online' || BJ.phase !== 'lobby') return;
+  const list = bjSeatList(), ul = $('#bj-plist'); ul.innerHTML = '';
+  list.forEach(([uid, p]) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span>${esc(p.name)}${uid === UID ? ' (TÚ)' : ''}${BJ.roomData && uid === BJ.roomData.host ? ' ★' : ''}</span>`;
+    ul.appendChild(li);
+  });
+  $('#bj-lobby-msg').textContent = (BJ.isHost ? `COMPARTE EL CÓDIGO ${BJ.room}. ` : 'ESPERANDO AL ANFITRIÓN (★)… ') + `${list.length}/5 JUGADORES`;
+  $('#bj-go').hidden = !BJ.isHost || BJ.spectating;
+  $('#bj-go').disabled = list.length < 1;
+}
+function bjSync() {
+  const d = BJ.roomData; if (!d || BJ.mode !== 'online') return;
+  BJ.isHost = d.host === UID;
+  if (d.round !== BJ.round) { BJ.round = d.round; BJ.resultShown = false; }
+  BJ.phase = d.state;
+  bjView(d.state === 'lobby' ? 'lobby' : 'game');
+  if (d.state === 'lobby') { bjLobbyRender(); return; }
+  $('#bj-room2').textContent = (BJ.spectating ? '👁 ESPECTADOR · MESA ' : 'MESA ') + BJ.room;
+  $('#bj-spec-badge').hidden = !BJ.spectating;
+  bjRenderOnline();
+  const myTurn = !BJ.spectating && d.state === 'play' && bjTurnUid() === UID;
+  $('#bj-ctrl').hidden = !myTurn;
+  $('#bj-hit').disabled = !myTurn; $('#bj-stand').disabled = !myTurn;
+  $('#bj-again-row').hidden = !(d.state === 'over' && BJ.isHost && !BJ.spectating);
+  if (d.state === 'over' && !BJ.resultShown) { BJ.resultShown = true; bjOnlineShowResult(); }
+}
+function bjRenderOnline() {
+  const d = BJ.roomData; if (!d) return;
+  bjHandEl($('#bj-dealer-cards'), d.dealerHand || [], d.dealerHidden && d.state === 'play');
+  $('#bj-dealer-val').textContent = (d.dealerHidden && d.state === 'play') ? '' : 'VALOR: ' + bjHandValue(d.dealerHand || []);
+  const list = bjSeatList(), seats = $('#bj-seats'), turnUid = bjTurnUid(), now = Date.now();
+  seats.innerHTML = '';
+  list.forEach(([uid, p]) => {
+    const seat = document.createElement('div'), gone = uid !== UID && isStale(p.lastSeen, now);
+    seat.className = 'bj-seat' + (uid === UID ? ' me' : '') + (uid === turnUid ? ' turn' : '');
+    seat.innerHTML = `<div class="bj-name"><b>${esc(p.name)}</b>${uid === UID ? ' (TÚ)' : ''}${gone ? ' <span class="discon">⚠</span>' : ''}</div>`;
+    const cardsEl = document.createElement('div'); cardsEl.className = 'bj-cards';
+    bjHandEl(cardsEl, p.hand || [], false);
+    seat.appendChild(cardsEl);
+    const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = (p.hand || []).length ? 'VALOR: ' + bjHandValue(p.hand) : '';
+    seat.appendChild(val);
+    const statusTxt = { waiting: 'ESPERA LA PRÓXIMA MANO', playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[p.status] || '';
+    const st = document.createElement('div'); st.className = 'bj-status' + (p.status === 'bust' ? ' bust' : p.status === 'blackjack' ? ' bjk' : '');
+    st.textContent = statusTxt + (gone ? ' · DESCONECTADO' : ''); seat.appendChild(st);
+    seats.appendChild(seat);
+  });
+  for (let i = list.length; i < 5; i++) { const e = document.createElement('div'); e.className = 'bj-seat empty'; e.innerHTML = '<div class="bj-name">ASIENTO LIBRE</div>'; seats.appendChild(e); }
+  fitSoon();
+}
+function bjOnlineShowResult() {
+  if (BJ.spectating) return;
+  const me = BJ.roomPlayers[UID];
+  if (!me || me.status === 'waiting') { bjMsg(''); return; }
+  const res = bjResult(me.hand || [], BJ.roomData.dealerHand || []);
+  bjShowResult(res);
+  if (res === 'win' || res === 'blackjack') { SFX.play('win'); LB.increment('veintiuno').then(bjLB); }
+  else if (res === 'push') SFX.play('click'); else SFX.play('lose');
+}
+async function bjOnlineHit() {
+  if (BJ.spectating || bjTurnUid() !== UID) return;
+  try {
+    await fs.runTransaction(db, async tx => {
+      const roomRef = fs.doc(db, 'blackjack', BJ.room), meRef = fs.doc(db, 'blackjack', BJ.room, 'players', UID);
+      const [rs, ms] = await Promise.all([tx.get(roomRef), tx.get(meRef)]);
+      if (!rs.exists() || !ms.exists()) return;
+      const deck = [...rs.data().deck], card = deck.pop();
+      const hand = [...(ms.data().hand || []), card], v = bjHandValue(hand);
+      const status = v > 21 ? 'bust' : (v === 21 ? 'stand' : 'playing');
+      tx.update(roomRef, { deck }); tx.update(meRef, { hand, status });
+    });
+    SFX.play('click');
+  } catch (e) { console.error(e); }
+}
+function bjOnlineStand() {
+  if (BJ.spectating || bjTurnUid() !== UID) return;
+  SFX.play('click');
+  fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', UID), { status: 'stand' }).catch(console.error);
+}
+async function bjOnlineDeal() {
+  if (!BJ.isHost || BJ.spectating) return;
+  const list = bjSeatList(); if (!list.length) return;
+  const deck = bjShuffle(bjFreshDeck()), dealerHand = [deck.pop(), deck.pop()], hands = {};
+  list.forEach(([uid]) => { hands[uid] = [deck.pop(), deck.pop()]; });
+  try {
+    await fs.updateDoc(fs.doc(db, 'blackjack', BJ.room), { state: 'play', deck, dealerHand, dealerHidden: true, round: (BJ.roomData.round || 0) + 1 });
+    await Promise.all(list.map(([uid]) => {
+      const h = hands[uid], status = bjIsBlackjack(h) ? 'blackjack' : 'playing';
+      return fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', uid), { hand: h, status });
+    }));
+  } catch (e) { console.error(e); }
+}
+function bjHostPoll() {
+  if (BJ.mode !== 'online' || !BJ.isHost || BJ.spectating || !BJ.roomData) return;
+  if (BJ.roomData.state !== 'play') return;
+  const turnUid = bjTurnUid();
+  if (turnUid) {
+    const p = BJ.roomPlayers[turnUid];
+    if (p && isStale(p.lastSeen, Date.now())) fs.updateDoc(fs.doc(db, 'blackjack', BJ.room, 'players', turnUid), { status: 'stand' }).catch(() => {});
+    return;
+  }
+  if (!BJ._dealerRunning) { BJ._dealerRunning = true; bjHostDealerLoop(); }
+}
+async function bjHostDealerLoop() {
+  const room = BJ.room;
+  try {
+    for (let guard = 0; guard < 30; guard++) {
+      if (BJ.room !== room || !BJ.isHost) break;
+      await new Promise(r => setTimeout(r, 800));
+      if (BJ.room !== room || !BJ.isHost) break;
+      const snap = await fs.getDoc(fs.doc(db, 'blackjack', room));
+      if (!snap.exists()) break;
+      const d = snap.data();
+      if (d.state !== 'play') break;
+      if (d.dealerHidden) { await fs.updateDoc(fs.doc(db, 'blackjack', room), { dealerHidden: false }); continue; }
+      const listSnap = await fs.getDocs(fs.collection(db, 'blackjack', room, 'players'));
+      const players = []; listSnap.forEach(p => players.push(p.data()));
+      const active = players.filter(p => p.status !== 'waiting');
+      const allBust = active.length > 0 && active.every(p => p.status === 'bust');
+      const dv = bjHandValue(d.dealerHand || []);
+      if (!allBust && dv < 17) {
+        const deck = [...(d.deck || [])], card = deck.pop();
+        await fs.updateDoc(fs.doc(db, 'blackjack', room), { deck, dealerHand: fs.arrayUnion(card) });
+        continue;
+      }
+      await fs.updateDoc(fs.doc(db, 'blackjack', room), { state: 'over' });
+      break;
+    }
+  } catch (e) { console.error(e); }
+  BJ._dealerRunning = false;
+}
+function bjLeaveOnline() {
+  BJ.unsubs.forEach(u => u()); BJ.unsubs = [];
+  if (BJ.hbStop) { BJ.hbStop(); BJ.hbStop = null; }
+  if (BJ._hostTimer) { clearInterval(BJ._hostTimer); BJ._hostTimer = null; }
+  if (BJ.room && fs && !BJ.spectating) {
+    const room = BJ.room, others = Object.keys(BJ.roomPlayers).filter(u => u !== UID);
+    if (BJ.isHost && others.length) fs.updateDoc(fs.doc(db, 'blackjack', room), { host: others[0] }).catch(() => {});
+    fs.deleteDoc(fs.doc(db, 'blackjack', room, 'players', UID)).catch(() => {});
+  }
+  BJ.room = null; BJ.roomData = null; BJ.roomPlayers = {}; BJ.isHost = false; BJ.spectating = false; BJ._dealerRunning = false;
+}
+function bjToMenu() {
+  clearTimeout(BJ.dealTimer);
+  if (BJ.mode === 'online') bjLeaveOnline();
+  BJ.mode = null; BJ.phase = 'menu'; BJ.spectating = false;
+  bjView('menu');
+}
+$('#bj-spec-btn').onclick = async () => {
+  const list = $('#bj-spec-list');
+  if (!list.hidden) { list.hidden = true; return; }
+  SFX.play('click'); list.hidden = false; list.innerHTML = '<li class="muted">CARGANDO…</li>';
+  const rooms = await liveRooms('blackjack');
+  if (rooms === null) { list.innerHTML = '<li class="muted">NO SE PUDO CARGAR</li>'; return; }
+  const stateN = { lobby: 'EN LOBBY', play: 'JUGANDO', over: 'MANO TERMINADA' };
+  list.innerHTML = rooms.length
+    ? rooms.map(r => `<li><span><b>MESA ${r.code}</b><small>${stateN[r.data.state] || r.data.state}</small></span><button class="btn orange" data-code="${r.code}">VER</button></li>`).join('')
+    : '<li class="muted">NO HAY MESAS RECIENTES</li>';
+  list.querySelectorAll('[data-code]').forEach(b => b.onclick = () => { SFX.play('click'); bjSpecOpen(b.dataset.code); });
+};
+$('#bj-local').onclick = () => { SFX.play('start'); bjLocalDeal(); };
+$('#bj-create').onclick = bjCreate;
+$('#bj-join').onclick = bjJoin;
+$('#bj-code').addEventListener('keydown', e => { if (e.key === 'Enter') bjJoin(); });
+$('#bj-go').onclick = bjOnlineDeal;
+$('#bj-leave').onclick = bjToMenu;
+$('#bj-quit').onclick = bjToMenu;
+$('#bj-hit').onclick = () => { BJ.mode === 'local' ? bjLocalHit() : bjOnlineHit(); };
+$('#bj-stand').onclick = () => { BJ.mode === 'local' ? bjLocalStand() : bjOnlineStand(); };
+$('#bj-again').onclick = () => { if (BJ.mode === 'local') bjLocalDeal(); else if (BJ.isHost) bjOnlineDeal(); };
+window.addEventListener('beforeunload', () => { if (BJ.mode === 'online') bjLeaveOnline(); });
+bjLB(); bjView('menu');
 
 /* ---------- ajuste a la pantalla ---------- */
 function fitAll() {
@@ -2761,6 +3462,22 @@ function drawSplash(g, c) {
     x.fillStyle = '#b13e53'; for (let i = 6; i < 160; i += 12) { x.fillRect(i, 14, 6, 2); x.fillRect(i - 6, 58, 6, 2); }
     for (let j = 0; j < 23; j++) for (let i = 0; i < 3; i++) { x.fillStyle = (i + j) % 2 ? '#1a1c2c' : '#f4f4f4'; x.fillRect(130 + i * 2, 16 + j * 2, 2, 2); }
     put(vspr(0, 0), 16, 16, 3); put(vspr(1, 1), 60, 30, 3); put(vspr(2, 2), 22, 40, 3);
+  } else if (g === '21') {
+    c.width = 160; c.height = 72;
+    x.fillStyle = '#0b3d2e'; x.fillRect(0, 0, 160, 72);
+    x.strokeStyle = '#d4af37'; x.lineWidth = 3; x.strokeRect(5, 5, 150, 62);
+    const cardMini = (X, Y, rot, txt, red) => {
+      x.save(); x.translate(X, Y); x.rotate(rot);
+      x.fillStyle = '#f4f4f4'; x.fillRect(-15, -20, 30, 40);
+      x.fillStyle = red ? '#b13e53' : '#1a1c2c';
+      x.font = '11px "Press Start 2P"'; x.textAlign = 'left'; x.fillText(txt, -11, -6);
+      x.restore();
+    };
+    cardMini(54, 42, -0.18, 'A♠', false);
+    cardMini(76, 38, 0.12, 'K♥', true);
+    x.fillStyle = '#ffcd75'; x.font = '18px "Press Start 2P"'; x.textAlign = 'center'; x.fillText('21', 122, 46);
+    pxCircle(x, 26, 20, 7, '#d4af37'); pxCircle(x, 26, 20, 5, '#0b3d2e');
+    pxCircle(x, 132, 16, 5, '#d4af37'); pxCircle(x, 132, 16, 3, '#0b3d2e');
   }
 }
 document.querySelectorAll('.splash').forEach(sp => {
@@ -2783,7 +3500,7 @@ function goTab(t) {
 }
 const GAMES = [
   { g: 'minas', n: 'BUSCAMINAS' }, { g: 'batalla', n: 'BATALLA NAVAL' }, { g: 'tiro', n: 'ANIMAL AL TIRO' },
-  { g: 'carreras', n: 'CARRERAS' }, { g: 'funciones', n: 'COMBATE DE FUNCIONES' },
+  { g: 'carreras', n: 'CARRERAS' }, { g: 'funciones', n: 'COMBATE DE FUNCIONES' }, { g: '21', n: 'CASINO 21' },
 ];
 (() => {
   const grid = $('#menu-grid');
