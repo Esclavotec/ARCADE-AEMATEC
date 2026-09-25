@@ -578,6 +578,7 @@ nav .btn{padding:8px 12px}
           <div class="rc-top">
             <span class="tag" id="bj-room2"></span>
             <span id="bj-spec-badge" class="badge" hidden>👁 ESPECTADOR</span>
+            <button class="btn gray" id="bj-toggle-val">OCULTAR VALOR</button>
             <button class="btn gray" id="bj-quit">SALIR</button>
           </div>
           <div class="bj-table">
@@ -3122,9 +3123,15 @@ function bjView(v) {
 const BJ = {
   mode: null, phase: 'menu', spectating: false,
   room: null, isHost: false, roomData: null, roomPlayers: {}, unsubs: [], hbStop: null, _hostTimer: null, _dealerRunning: false,
-  round: 0, resultShown: false,
+  round: 0, resultShown: false, showValue: store.get('pa_bj_showval', true),
   deck: [], hand: [], dealer: [], dealerHidden: true, status: 'playing', dealTimer: null
 };
+function bjToggleValBtn() { $('#bj-toggle-val').textContent = BJ.showValue ? 'OCULTAR VALOR' : 'MOSTRAR VALOR'; }
+$('#bj-toggle-val').onclick = () => {
+  BJ.showValue = !BJ.showValue; store.set('pa_bj_showval', BJ.showValue); bjToggleValBtn(); SFX.play('click');
+  if (BJ.mode === 'online') bjRenderOnline(); else if (BJ.mode === 'local') bjRenderLocal();
+};
+bjToggleValBtn();
 
 /* ---- solo vs crupier ---- */
 function bjLocalDeal() {
@@ -3146,7 +3153,7 @@ function bjLocalHit() {
   if (BJ.mode !== 'local' || BJ.status !== 'playing') return;
   BJ.hand.push(BJ.deck.pop());
   const v = bjHandValue(BJ.hand);
-  if (v > 21) BJ.status = 'bust'; else if (v === 21) BJ.status = 'stand';
+  if (v > 21) BJ.status = 'bust';
   SFX.play('click'); bjRenderLocal();
   if (BJ.status !== 'playing') bjLocalResolveDealer();
 }
@@ -3173,7 +3180,7 @@ function bjLocalFinish() {
 }
 function bjRenderLocal() {
   bjHandEl($('#bj-dealer-cards'), BJ.dealer, BJ.dealerHidden);
-  $('#bj-dealer-val').textContent = BJ.dealerHidden ? '' : 'VALOR: ' + bjHandValue(BJ.dealer);
+  $('#bj-dealer-val').textContent = (BJ.dealerHidden || !BJ.showValue) ? '' : 'VALOR: ' + bjHandValue(BJ.dealer);
   const seats = $('#bj-seats'); seats.innerHTML = '';
   const seat = document.createElement('div');
   seat.className = 'bj-seat me' + (BJ.status === 'playing' ? ' turn' : '');
@@ -3181,7 +3188,7 @@ function bjRenderLocal() {
   const cardsEl = document.createElement('div'); cardsEl.className = 'bj-cards';
   bjHandEl(cardsEl, BJ.hand, false);
   seat.appendChild(cardsEl);
-  const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = 'VALOR: ' + bjHandValue(BJ.hand);
+  const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = BJ.showValue ? 'VALOR: ' + bjHandValue(BJ.hand) : '';
   seat.appendChild(val);
   const statusTxt = { playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[BJ.status] || '';
   const st = document.createElement('div'); st.className = 'bj-status' + (BJ.status === 'bust' ? ' bust' : BJ.status === 'blackjack' ? ' bjk' : '');
@@ -3277,7 +3284,7 @@ function bjSync() {
 function bjRenderOnline() {
   const d = BJ.roomData; if (!d) return;
   bjHandEl($('#bj-dealer-cards'), d.dealerHand || [], d.dealerHidden && d.state === 'play');
-  $('#bj-dealer-val').textContent = (d.dealerHidden && d.state === 'play') ? '' : 'VALOR: ' + bjHandValue(d.dealerHand || []);
+  $('#bj-dealer-val').textContent = ((d.dealerHidden && d.state === 'play') || !BJ.showValue) ? '' : 'VALOR: ' + bjHandValue(d.dealerHand || []);
   const list = bjSeatList(), seats = $('#bj-seats'), turnUid = bjTurnUid(), now = Date.now();
   seats.innerHTML = '';
   list.forEach(([uid, p]) => {
@@ -3288,7 +3295,7 @@ function bjRenderOnline() {
     const cardsEl = document.createElement('div'); cardsEl.className = 'bj-cards';
     bjHandEl(cardsEl, hand, false);
     seat.appendChild(cardsEl);
-    const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = hand.length ? 'VALOR: ' + bjHandValue(hand) : '';
+    const val = document.createElement('div'); val.className = 'bj-val'; val.textContent = (hand.length && BJ.showValue) ? 'VALOR: ' + bjHandValue(hand) : '';
     seat.appendChild(val);
     const statusTxt = { waiting: 'ESPERA LA PRÓXIMA MANO', playing: '', stand: 'PLANTADO', bust: 'SE PASÓ', blackjack: '¡21!' }[status] || '';
     const st = document.createElement('div'); st.className = 'bj-status' + (status === 'bust' ? ' bust' : status === 'blackjack' ? ' bjk' : '');
@@ -3316,7 +3323,7 @@ async function bjOnlineHit() {
       if (!rs.exists()) return;
       const d = rs.data(), deck = [...d.deck], card = deck.pop();
       const hand = [...((d.hands && d.hands[UID]) || []), card], v = bjHandValue(hand);
-      const status = v > 21 ? 'bust' : (v === 21 ? 'stand' : 'playing');
+      const status = v > 21 ? 'bust' : 'playing';
       tx.update(roomRef, { deck, [`hands.${UID}`]: hand, [`status.${UID}`]: status });
     });
     SFX.play('click');
